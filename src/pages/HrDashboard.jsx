@@ -1,8 +1,7 @@
-// src/pages/HrDashboard.jsx
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import HrInfo from "../components/hr/HrInfo";
-import AddHrForm from "../components/admin/AddHrForm"; // reuse the same form
+import AddHrForm from "../components/admin/AddHrForm";
 import AddJobForm from "../components/hr/AddJobForm";
 import JobList from "../components/hr/JobList";
 import EmployeeList from "../components/hr/EmployeeList";
@@ -26,9 +25,13 @@ export default function HrDashboard() {
 
   return (
     <div className="container mx-auto px-4 py-6 space-y-6">
-      {/* Top Section: HR Details + Action Buttons Below */}
+      {/* PAGE TITLE */}
+      <h1 className="text-3xl font-bold text-center text-sky-700 mb-4">
+        HR Dashboard
+      </h1>
+
+      {/* Top Section */}
       <div className="bg-sky-100 rounded-lg p-6 shadow space-y-4">
-        {/* Pass role="hr" so HrInfo knows which localStorage key / endpoint to use */}
         <HrInfo role="hr" refreshKey={refreshKey} />
 
         <div className="flex flex-col md:flex-row gap-3 justify-center">
@@ -72,6 +75,7 @@ export default function HrDashboard() {
         <JobList refreshKey={refreshKey} />
       </div>
 
+      {/* Add Employee Modal */}
       {showAddEmployee && (
         <AddHrForm
           mode="hr"
@@ -83,6 +87,7 @@ export default function HrDashboard() {
         />
       )}
 
+      {/* Add Job Modal */}
       {showAddJob && (
         <AddJobForm
           onClose={() => setShowAddJob(false)}

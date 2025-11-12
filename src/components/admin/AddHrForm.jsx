@@ -4,7 +4,7 @@ import axios from "axios";
 import { BACKEND_BASE_URL } from "../../api/config";
 
 /**
- * Reusable modal form to add an HR user (admin mode) or an employee (hr mode).
+ * Two-page modal form (5 fields left / 5 fields right per page)
  *
  * Props:
  * - mode: "admin" | "hr" (defaults to "admin")
@@ -13,6 +13,7 @@ import { BACKEND_BASE_URL } from "../../api/config";
  */
 export default function AddHrForm({ mode = "admin", onClose, onAdded }) {
   const [form, setForm] = useState({
+    // Page 1 (first 10 fields)
     firstName: "",
     lastName: "",
     email: "",
@@ -23,6 +24,7 @@ export default function AddHrForm({ mode = "admin", onClose, onAdded }) {
     gender: "",
     joiningDate: "",
     salary: "",
+    // Page 2 (next 10 fields)
     daysPresent: "",
     paidLeaves: "",
     password: "",
@@ -34,6 +36,8 @@ export default function AddHrForm({ mode = "admin", onClose, onAdded }) {
     epsNumber: "",
     esiNumber: "",
   });
+
+  const [step, setStep] = useState(1); // 1 or 2
   const [submitting, setSubmitting] = useState(false);
   const [message, setMessage] = useState(null);
 
@@ -46,19 +50,48 @@ export default function AddHrForm({ mode = "admin", onClose, onAdded }) {
     setForm((s) => ({ ...s, [name]: value }));
   }
 
-  async function handleSubmit(e) {
-    e.preventDefault();
+  function validateStep1() {
+    if (!form.firstName.trim()) {
+      setMessage({ type: "error", text: "First Name is required." });
+      return false;
+    }
+    if (!form.email.trim()) {
+      setMessage({ type: "error", text: "Email is required." });
+      return false;
+    }
+    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (form.email && !emailPattern.test(form.email)) {
+      setMessage({ type: "error", text: "Please enter a valid email." });
+      return false;
+    }
     setMessage(null);
+    return true;
+  }
 
+  function validateAll() {
     if (!form.firstName.trim() || !form.email.trim() || !form.password.trim()) {
       setMessage({
         type: "error",
         text: "Please fill required fields: First Name, Email, Password.",
       });
-      return;
+      return false;
     }
+    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailPattern.test(form.email)) {
+      setMessage({ type: "error", text: "Please enter a valid email." });
+      return false;
+    }
+    setMessage(null);
+    return true;
+  }
+
+  async function handleSubmit(e) {
+    e?.preventDefault?.();
+    if (!validateAll()) return;
 
     setSubmitting(true);
+    setMessage(null);
+
     try {
       const payload = {
         firstName: form.firstName,
@@ -119,6 +152,7 @@ export default function AddHrForm({ mode = "admin", onClose, onAdded }) {
         esiNumber: "",
       });
 
+      setStep(1);
       onAdded?.();
     } catch (error) {
       console.error("Add form error:", error);
@@ -142,9 +176,36 @@ export default function AddHrForm({ mode = "admin", onClose, onAdded }) {
           <button
             onClick={onClose}
             className="text-gray-500 hover:text-gray-700 text-lg"
+            aria-label="Close"
           >
             ✕
           </button>
+        </div>
+
+        {/* progress */}
+        <div className="mb-4">
+          <div className="flex items-center gap-4">
+            <div
+              className={`flex-1 text-sm ${
+                step === 1 ? "font-semibold" : "text-gray-500"
+              }`}
+            >
+              Step 1 — Basic
+            </div>
+            <div
+              className={`flex-1 text-sm ${
+                step === 2 ? "font-semibold" : "text-gray-500"
+              }`}
+            >
+              Step 2 — Payroll & IDs
+            </div>
+          </div>
+          <div className="mt-2 bg-gray-200 h-2 rounded overflow-hidden">
+            <div
+              className="h-2 rounded bg-sky-600"
+              style={{ width: step === 1 ? "45%" : "100%" }}
+            />
+          </div>
         </div>
 
         {message && (
@@ -159,257 +220,307 @@ export default function AddHrForm({ mode = "admin", onClose, onAdded }) {
           </div>
         )}
 
-        <form
-          onSubmit={handleSubmit}
-          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 bg-gray-50 p-4 rounded"
-        >
-          {/* Column 1 */}
-          <div className="space-y-3">
-            <label className="block">
-              <span className="text-sm text-gray-700">First Name *</span>
-              <input
-                name="firstName"
-                value={form.firstName}
-                onChange={handleInput}
-                required
-                className="mt-1 block w-full px-3 py-2 border rounded focus:outline-none focus:ring focus:ring-sky-200"
-              />
-            </label>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          {/* PAGE 1 - five left / five right */}
+          {step === 1 && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-gray-50 p-4 rounded">
+              {/* LEFT column (5 fields) */}
+              <div className="space-y-3">
+                <label className="block">
+                  <span className="text-sm text-gray-700">First Name *</span>
+                  <input
+                    name="firstName"
+                    value={form.firstName}
+                    onChange={handleInput}
+                    required
+                    className="mt-1 block w-full px-3 py-2 border rounded focus:outline-none focus:ring focus:ring-sky-200"
+                  />
+                </label>
 
-            <label className="block">
-              <span className="text-sm text-gray-700">Last Name</span>
-              <input
-                name="lastName"
-                value={form.lastName}
-                onChange={handleInput}
-                className="mt-1 block w-full px-3 py-2 border rounded focus:outline-none focus:ring focus:ring-sky-200"
-              />
-            </label>
+                <label className="block">
+                  <span className="text-sm text-gray-700">Email *</span>
+                  <input
+                    name="email"
+                    type="email"
+                    value={form.email}
+                    onChange={handleInput}
+                    required
+                    className="mt-1 block w-full px-3 py-2 border rounded focus:outline-none focus:ring focus:ring-sky-200"
+                  />
+                </label>
 
-            <label className="block">
-              <span className="text-sm text-gray-700">Email *</span>
-              <input
-                name="email"
-                type="email"
-                value={form.email}
-                onChange={handleInput}
-                required
-                className="mt-1 block w-full px-3 py-2 border rounded focus:outline-none focus:ring focus:ring-sky-200"
-              />
-            </label>
+                <label className="block">
+                  <span className="text-sm text-gray-700">Card Number</span>
+                  <input
+                    name="cardNumber"
+                    value={form.cardNumber}
+                    onChange={handleInput}
+                    className="mt-1 block w-full px-3 py-2 border rounded focus:outline-none focus:ring focus:ring-sky-200"
+                  />
+                </label>
 
-            <label className="block">
-              <span className="text-sm text-gray-700">Mobile</span>
-              <input
-                name="mobile"
-                value={form.mobile}
-                onChange={handleInput}
-                className="mt-1 block w-full px-3 py-2 border rounded focus:outline-none focus:ring focus:ring-sky-200"
-              />
-            </label>
+                <label className="block">
+                  <span className="text-sm text-gray-700">Domain</span>
+                  <input
+                    name="domain"
+                    value={form.domain}
+                    onChange={handleInput}
+                    placeholder="e.g., Java, .Net, Python"
+                    className="mt-1 block w-full px-3 py-2 border rounded focus:outline-none focus:ring focus:ring-sky-200"
+                  />
+                </label>
 
-            <label className="block">
-              <span className="text-sm text-gray-700">Card Number</span>
-              <input
-                name="cardNumber"
-                value={form.cardNumber}
-                onChange={handleInput}
-                className="mt-1 block w-full px-3 py-2 border rounded focus:outline-none focus:ring focus:ring-sky-200"
-              />
-            </label>
-          </div>
+                <label className="block">
+                  <span className="text-sm text-gray-700">Salary</span>
+                  <input
+                    name="salary"
+                    type="number"
+                    step="0.01"
+                    value={form.salary}
+                    onChange={handleInput}
+                    className="mt-1 block w-full px-3 py-2 border rounded focus:outline-none focus:ring focus:ring-sky-200"
+                  />
+                </label>
+              </div>
 
-          {/* Column 2 */}
-          <div className="space-y-3">
-            <label className="block">
-              <span className="text-sm text-gray-700">Job Role</span>
-              <input
-                name="jobRole"
-                value={form.jobRole}
-                onChange={handleInput}
-                placeholder="e.g., Developer, Intern"
-                className="mt-1 block w-full px-3 py-2 border rounded focus:outline-none focus:ring focus:ring-sky-200"
-              />
-            </label>
+              {/* RIGHT column (5 fields) */}
+              <div className="space-y-3">
+                <label className="block">
+                  <span className="text-sm text-gray-700">Last Name</span>
+                  <input
+                    name="lastName"
+                    value={form.lastName}
+                    onChange={handleInput}
+                    className="mt-1 block w-full px-3 py-2 border rounded focus:outline-none focus:ring focus:ring-sky-200"
+                  />
+                </label>
 
-            <label className="block">
-              <span className="text-sm text-gray-700">Domain</span>
-              <input
-                name="domain"
-                value={form.domain}
-                onChange={handleInput}
-                placeholder="e.g., Java, .Net, Python"
-                className="mt-1 block w-full px-3 py-2 border rounded focus:outline-none focus:ring focus:ring-sky-200"
-              />
-            </label>
+                <label className="block">
+                  <span className="text-sm text-gray-700">Mobile</span>
+                  <input
+                    name="mobile"
+                    value={form.mobile}
+                    onChange={handleInput}
+                    className="mt-1 block w-full px-3 py-2 border rounded focus:outline-none focus:ring focus:ring-sky-200"
+                  />
+                </label>
 
-            <label className="block">
-              <span className="text-sm text-gray-700">Gender</span>
-              <select
-                name="gender"
-                value={form.gender}
-                onChange={handleInput}
-                className="mt-1 block w-full px-3 py-2 border rounded focus:outline-none focus:ring focus:ring-sky-200"
-              >
-                <option value="">Select gender</option>
-                <option value="Male">Male</option>
-                <option value="Female">Female</option>
-                <option value="Other">Other</option>
-              </select>
-            </label>
+                <label className="block">
+                  <span className="text-sm text-gray-700">Job Role</span>
+                  <input
+                    name="jobRole"
+                    value={form.jobRole}
+                    onChange={handleInput}
+                    placeholder="e.g., Developer, Intern"
+                    className="mt-1 block w-full px-3 py-2 border rounded focus:outline-none focus:ring focus:ring-sky-200"
+                  />
+                </label>
 
-            <label className="block">
-              <span className="text-sm text-gray-700">Joining Date</span>
-              <input
-                name="joiningDate"
-                type="date"
-                value={form.joiningDate}
-                onChange={handleInput}
-                className="mt-1 block w-full px-3 py-2 border rounded focus:outline-none focus:ring focus:ring-sky-200"
-              />
-            </label>
+                <label className="block">
+                  <span className="text-sm text-gray-700">Gender</span>
+                  <select
+                    name="gender"
+                    value={form.gender}
+                    onChange={handleInput}
+                    className="mt-1 block w-full px-3 py-2 border rounded focus:outline-none focus:ring focus:ring-sky-200"
+                  >
+                    <option value="">Select gender</option>
+                    <option value="Male">Male</option>
+                    <option value="Female">Female</option>
+                    <option value="Other">Other</option>
+                  </select>
+                </label>
 
-            <label className="block">
-              <span className="text-sm text-gray-700">Salary</span>
-              <input
-                name="salary"
-                type="number"
-                step="0.01"
-                value={form.salary}
-                onChange={handleInput}
-                className="mt-1 block w-full px-3 py-2 border rounded focus:outline-none focus:ring focus:ring-sky-200"
-              />
-            </label>
-          </div>
+                <label className="block">
+                  <span className="text-sm text-gray-700">Joining Date</span>
+                  <input
+                    name="joiningDate"
+                    type="date"
+                    value={form.joiningDate}
+                    onChange={handleInput}
+                    className="mt-1 block w-full px-3 py-2 border rounded focus:outline-none focus:ring focus:ring-sky-200"
+                  />
+                </label>
+              </div>
 
-          {/* Column 3 */}
-          <div className="space-y-3">
-            <label className="block">
-              <span className="text-sm text-gray-700">Days Present</span>
-              <input
-                name="daysPresent"
-                type="number"
-                value={form.daysPresent}
-                onChange={handleInput}
-                className="mt-1 block w-full px-3 py-2 border rounded focus:outline-none focus:ring focus:ring-sky-200"
-              />
-            </label>
+              {/* Buttons full-width */}
+              <div className="md:col-span-2 flex justify-between mt-2">
+                <div>
+                  <button
+                    type="button"
+                    onClick={onClose}
+                    className="px-5 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300"
+                  >
+                    Cancel
+                  </button>
+                </div>
 
-            <label className="block">
-              <span className="text-sm text-gray-700">Paid Leaves</span>
-              <input
-                name="paidLeaves"
-                type="number"
-                value={form.paidLeaves}
-                onChange={handleInput}
-                className="mt-1 block w-full px-3 py-2 border rounded focus:outline-none focus:ring focus:ring-sky-200"
-              />
-            </label>
+                <div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (validateStep1()) setStep(2);
+                    }}
+                    className="px-5 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700"
+                  >
+                    Next →
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
 
-            <label className="block">
-              <span className="text-sm text-gray-700">Password *</span>
-              <input
-                name="password"
-                type="password"
-                value={form.password}
-                onChange={handleInput}
-                required
-                className="mt-1 block w-full px-3 py-2 border rounded focus:outline-none focus:ring focus:ring-sky-200"
-              />
-            </label>
+          {/* PAGE 2 - five left / five right */}
+          {step === 2 && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-gray-50 p-4 rounded">
+              {/* LEFT column (5 fields) */}
+              <div className="space-y-3">
+                <label className="block">
+                  <span className="text-sm text-gray-700">Days Present</span>
+                  <input
+                    name="daysPresent"
+                    type="number"
+                    value={form.daysPresent}
+                    onChange={handleInput}
+                    className="mt-1 block w-full px-3 py-2 border rounded focus:outline-none focus:ring focus:ring-sky-200"
+                  />
+                </label>
 
-            <label className="block">
-              <span className="text-sm text-gray-700">Bank Account Number</span>
-              <input
-                name="bankAccountNumber"
-                value={form.bankAccountNumber}
-                onChange={handleInput}
-                className="mt-1 block w-full px-3 py-2 border rounded focus:outline-none focus:ring focus:ring-sky-200"
-              />
-            </label>
+                <label className="block">
+                  <span className="text-sm text-gray-700">Paid Leaves</span>
+                  <input
+                    name="paidLeaves"
+                    type="number"
+                    value={form.paidLeaves}
+                    onChange={handleInput}
+                    className="mt-1 block w-full px-3 py-2 border rounded focus:outline-none focus:ring focus:ring-sky-200"
+                  />
+                </label>
 
-            <label className="block">
-              <span className="text-sm text-gray-700">Bank Name</span>
-              <input
-                name="bankName"
-                value={form.bankName}
-                onChange={handleInput}
-                className="mt-1 block w-full px-3 py-2 border rounded focus:outline-none focus:ring focus:ring-sky-200"
-              />
-            </label>
+                <label className="block">
+                  <span className="text-sm text-gray-700">
+                    Bank Account Number
+                  </span>
+                  <input
+                    name="bankAccountNumber"
+                    value={form.bankAccountNumber}
+                    onChange={handleInput}
+                    className="mt-1 block w-full px-3 py-2 border rounded focus:outline-none focus:ring focus:ring-sky-200"
+                  />
+                </label>
 
-            <label className="block">
-              <span className="text-sm text-gray-700">PF Number</span>
-              <input
-                name="pfNumber"
-                value={form.pfNumber}
-                onChange={handleInput}
-                className="mt-1 block w-full px-3 py-2 border rounded focus:outline-none focus:ring focus:ring-sky-200"
-              />
-            </label>
+                <label className="block">
+                  <span className="text-sm text-gray-700">PF Number</span>
+                  <input
+                    name="pfNumber"
+                    value={form.pfNumber}
+                    onChange={handleInput}
+                    className="mt-1 block w-full px-3 py-2 border rounded focus:outline-none focus:ring focus:ring-sky-200"
+                  />
+                </label>
 
-            <label className="block">
-              <span className="text-sm text-gray-700">PAN Number</span>
-              <input
-                name="panNumber"
-                value={form.panNumber}
-                onChange={handleInput}
-                className="mt-1 block w-full px-3 py-2 border rounded focus:outline-none focus:ring focus:ring-sky-200"
-              />
-            </label>
+                <label className="block">
+                  <span className="text-sm text-gray-700">EPS Number</span>
+                  <input
+                    name="epsNumber"
+                    value={form.epsNumber}
+                    onChange={handleInput}
+                    className="mt-1 block w-full px-3 py-2 border rounded focus:outline-none focus:ring focus:ring-sky-200"
+                  />
+                </label>
+              </div>
 
-            <label className="block">
-              <span className="text-sm text-gray-700">UAN Number</span>
-              <input
-                name="uanNumber"
-                value={form.uanNumber}
-                onChange={handleInput}
-                className="mt-1 block w-full px-3 py-2 border rounded focus:outline-none focus:ring focus:ring-sky-200"
-              />
-            </label>
+              {/* RIGHT column (5 fields) */}
+              <div className="space-y-3">
+                <label className="block">
+                  <span className="text-sm text-gray-700">Password *</span>
+                  <input
+                    name="password"
+                    type="password"
+                    value={form.password}
+                    onChange={handleInput}
+                    required
+                    className="mt-1 block w-full px-3 py-2 border rounded focus:outline-none focus:ring focus:ring-sky-200"
+                  />
+                </label>
 
-            <label className="block">
-              <span className="text-sm text-gray-700">EPS Number</span>
-              <input
-                name="epsNumber"
-                value={form.epsNumber}
-                onChange={handleInput}
-                className="mt-1 block w-full px-3 py-2 border rounded focus:outline-none focus:ring focus:ring-sky-200"
-              />
-            </label>
+                <label className="block">
+                  <span className="text-sm text-gray-700">Bank Name</span>
+                  <input
+                    name="bankName"
+                    value={form.bankName}
+                    onChange={handleInput}
+                    className="mt-1 block w-full px-3 py-2 border rounded focus:outline-none focus:ring focus:ring-sky-200"
+                  />
+                </label>
 
-            <label className="block">
-              <span className="text-sm text-gray-700">ESI Number</span>
-              <input
-                name="esiNumber"
-                value={form.esiNumber}
-                onChange={handleInput}
-                className="mt-1 block w-full px-3 py-2 border rounded focus:outline-none focus:ring focus:ring-sky-200"
-              />
-            </label>
-          </div>
+                <label className="block">
+                  <span className="text-sm text-gray-700">PAN Number</span>
+                  <input
+                    name="panNumber"
+                    value={form.panNumber}
+                    onChange={handleInput}
+                    className="mt-1 block w-full px-3 py-2 border rounded focus:outline-none focus:ring focus:ring-sky-200"
+                  />
+                </label>
 
-          {/* Full width buttons row */}
-          <div className="col-span-1 sm:col-span-2 lg:col-span-3 flex justify-between mt-4">
-            <button
-              type="submit"
-              disabled={submitting}
-              className="px-5 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 disabled:opacity-50"
-            >
-              {submitting
-                ? isAdmin
-                  ? "Adding HR…"
-                  : "Adding Employee…"
-                : submitButtonText}
-            </button>
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-5 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300"
-            >
-              Cancel
-            </button>
-          </div>
+                <label className="block">
+                  <span className="text-sm text-gray-700">UAN Number</span>
+                  <input
+                    name="uanNumber"
+                    value={form.uanNumber}
+                    onChange={handleInput}
+                    className="mt-1 block w-full px-3 py-2 border rounded focus:outline-none focus:ring focus:ring-sky-200"
+                  />
+                </label>
+
+                <label className="block">
+                  <span className="text-sm text-gray-700">ESI Number</span>
+                  <input
+                    name="esiNumber"
+                    value={form.esiNumber}
+                    onChange={handleInput}
+                    className="mt-1 block w-full px-3 py-2 border rounded focus:outline-none focus:ring focus:ring-sky-200"
+                  />
+                </label>
+              </div>
+
+              {/* Buttons full-width */}
+              <div className="md:col-span-2 flex justify-between mt-2">
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setStep(1)}
+                    className="px-5 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300"
+                  >
+                    ← Previous
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={onClose}
+                    className="px-5 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300"
+                  >
+                    Cancel
+                  </button>
+                </div>
+
+                <div>
+                  <button
+                    type="submit"
+                    disabled={submitting}
+                    className="px-5 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 disabled:opacity-50"
+                  >
+                    {submitting
+                      ? isAdmin
+                        ? "Adding HR…"
+                        : "Adding Employee…"
+                      : submitButtonText}
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
         </form>
       </div>
     </div>

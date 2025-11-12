@@ -1,206 +1,168 @@
-// src/components/career/ApplicationForm.jsx
 import { useState } from "react";
 import axios from "axios";
 import { BACKEND_BASE_URL } from "../../api/config";
+import OTPVerification from "./OTPVerification";
+import SuccessMessage from "./SuccessMessage";
 
-/**
- * Props:
- * - job (object) optional: the job the user is applying to
- * - onClose() called when modal/form closed
- * - onSuccess(optional) -> callback after successful apply
- */
-export default function ApplicationForm({ job, onClose, onSuccess }) {
+export default function ApplicationForm({ job, onClose }) {
   const [form, setForm] = useState({
     name: "",
     email: "",
     phone: "",
-    resumeLink: "",
   });
   const [file, setFile] = useState(null);
-  const [submitting, setSubmitting] = useState(false);
+  const [stage, setStage] = useState("form"); // form | otp | success
   const [message, setMessage] = useState(null);
+  const [tempAppId, setTempAppId] = useState(null); // backend response id
 
-  function handleInput(e) {
-    const { name, value } = e.target;
-    setForm((s) => ({ ...s, [name]: value }));
-  }
+  const handleChange = (e) => {
+    setForm((s) => ({ ...s, [e.target.name]: e.target.value }));
+  };
 
-  function handleFile(e) {
-    const f = e.target.files?.[0] || null;
-    setFile(f);
-    if (f) setForm((s) => ({ ...s, resumeLink: "" }));
-  }
+  const handleFile = (e) => setFile(e.target.files?.[0] || null);
 
-  async function submit(e) {
+  async function handleSubmit(e) {
     e.preventDefault();
     setMessage(null);
-
-    if (!form.name.trim() || !form.email.trim()) {
-      setMessage({ type: "error", text: "Please provide name and email." });
-      return;
-    }
-
-    if (!job?.id && !job?._id) {
-      setMessage({ type: "error", text: "No job selected to apply for." });
-      return;
-    }
-
-    setSubmitting(true);
     try {
       const jobId = job.id ?? job._id;
-      let res;
-      if (file) {
-        const fd = new FormData();
-        fd.append("name", form.name);
-        fd.append("email", form.email);
-        fd.append("phone", form.phone || "");
-        fd.append("resume", file);
-        res = await axios.post(`${BACKEND_BASE_URL}/jobs/${jobId}/apply`, fd, {
-          headers: { "Content-Type": "multipart/form-data" },
-        });
-      } else {
-        const payload = {
-          name: form.name,
-          email: form.email,
-          phone: form.phone || "",
-          resumeLink: form.resumeLink || "",
-        };
-        res = await axios.post(
-          `${BACKEND_BASE_URL}/jobs/${jobId}/apply`,
-          payload,
-          {
-            headers: { "Content-Type": "application/json" },
-          }
-        );
-      }
+      const fd = new FormData();
+      fd.append("jobId", jobId);
+      fd.append("fullName", form.name);
+      fd.append("email", form.email);
+      fd.append("mobileNumber", form.phone);
+      if (file) fd.append("resume", file);
 
-      setMessage({
-        type: "success",
-        text: "Application submitted — thank you!",
+      const res = await axios.post(`${BACKEND_BASE_URL}/jobs/apply`, fd, {
+        headers: { "Content-Type": "multipart/form-data" },
       });
-      setForm({ name: "", email: "", phone: "", resumeLink: "" });
-      setFile(null);
-      if (typeof onSuccess === "function") onSuccess(res.data);
-      // close after short delay so user sees message
-      setTimeout(() => {
-        onClose?.();
-      }, 900);
+
+      if (res.data?.otpSent) {
+        setTempAppId(res.data.applicationId);
+        setStage("otp");
+      } else {
+        setMessage({ type: "error", text: "Failed to send OTP." });
+      }
     } catch (err) {
-      console.error("Apply error:", err);
-      setMessage({
-        type: "error",
-        text:
-          (err?.response?.data?.message &&
-            `Failed: ${err.response.data.message}`) ||
-          "Failed to submit application — check backend.",
-      });
-    } finally {
-      setSubmitting(false);
+      setMessage({ type: "error", text: "Failed to apply." });
     }
   }
 
-  // small modal / panel style
+  if (stage === "otp") {
+    return (
+      <OTPVerification
+        appId={tempAppId}
+        email={form.email}
+        onSuccess={() => setStage("success")}
+        onClose={onClose}
+      />
+    );
+  }
+
+  if (stage === "success") {
+    return <SuccessMessage onClose={onClose} />;
+  }
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/40" onClick={onClose} />
-      <div className="relative max-w-xl w-full bg-white rounded shadow-lg p-6 z-10">
-        <div className="flex items-center justify-between">
-          <h2 className="text-xl font-semibold">
-            Apply for "{job?.title || "Selected Role"}"
-          </h2>
-          <button
-            onClick={onClose}
-            className="text-gray-500 hover:text-gray-700"
-          >
-            ✕
-          </button>
-        </div>
+    <div className="fixed inset-0 flex items-center justify-center bg-black/40">
+      <div className="bg-white p-6 rounded shadow-lg w-full max-w-md">
+        <h2 className="text-xl font-semibold mb-4">
+          Apply for "{job?.jobTitle || "Selected Role"}"
+        </h2>
 
         {message && (
           <div
-            className={`mt-3 p-2 rounded ${
-              message.type === "success"
-                ? "bg-green-50 border-l-4 border-green-300 text-green-800"
-                : "bg-red-50 border-l-4 border-red-300 text-red-800"
+            className={`p-2 mb-2 rounded ${
+              message.type === "error"
+                ? "bg-red-100 text-red-700"
+                : "bg-green-100 text-green-700"
             }`}
           >
             {message.text}
           </div>
         )}
 
-        <form onSubmit={submit} className="mt-4 space-y-3">
-          <label className="block">
-            <span className="text-sm">Full name</span>
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Full Name */}
+          <div className="relative">
             <input
+              id="name"
               name="name"
               value={form.name}
-              onChange={handleInput}
+              onChange={handleChange}
+              placeholder=" "
               required
-              className="mt-1 block w-full px-3 py-2 border rounded"
+              className="peer w-full border-b-2 border-gray-300 py-2 px-0 text-gray-900 focus:outline-none focus:border-green-600"
             />
-          </label>
+            <label
+              htmlFor="name"
+              className="absolute left-0 px-0 text-gray-500 duration-200 transform -translate-y-3 scale-75 top-3 origin-[0] peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:-translate-y-3 peer-focus:scale-75 peer-focus:text-green-600"
+            >
+              Full Name
+            </label>
+          </div>
 
-          <label className="block">
-            <span className="text-sm">Email</span>
+          {/* Email */}
+          <div className="relative">
             <input
+              id="email"
               name="email"
               type="email"
               value={form.email}
-              onChange={handleInput}
+              onChange={handleChange}
+              placeholder=" "
               required
-              className="mt-1 block w-full px-3 py-2 border rounded"
+              className="peer w-full border-b-2 border-gray-300 py-2 px-0 text-gray-900 focus:outline-none focus:border-green-600"
             />
-          </label>
+            <label
+              htmlFor="email"
+              className="absolute left-0 px-0 text-gray-500 duration-200 transform -translate-y-3 scale-75 top-3 origin-[0] peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:-translate-y-3 peer-focus:scale-75 peer-focus:text-green-600"
+            >
+              Email
+            </label>
+          </div>
 
-          <label className="block">
-            <span className="text-sm">Phone (optional)</span>
+          {/* Mobile Number */}
+          <div className="relative">
             <input
+              id="phone"
               name="phone"
               value={form.phone}
-              onChange={handleInput}
-              className="mt-1 block w-full px-3 py-2 border rounded"
+              onChange={handleChange}
+              placeholder=" "
+              className="peer w-full border-b-2 border-gray-300 py-2 px-0 text-gray-900 focus:outline-none focus:border-green-600"
             />
-          </label>
-
-          <div>
-            <span className="text-sm">Resume (file or link)</span>
-            <div className="mt-2 grid gap-2">
-              <input
-                type="file"
-                accept=".pdf,.doc,.docx"
-                onChange={handleFile}
-              />
-              <input
-                name="resumeLink"
-                value={form.resumeLink}
-                onChange={handleInput}
-                placeholder="Or paste resume link"
-                className="mt-1 block w-full px-3 py-2 border rounded"
-              />
-              <p className="text-xs text-gray-500">
-                If you choose a file, the file will be uploaded. Otherwise the
-                resume link will be submitted.
-              </p>
-            </div>
+            <label
+              htmlFor="phone"
+              className="absolute left-0 px-0 text-gray-500 duration-200 transform -translate-y-3 scale-75 top-3 origin-[0] peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:-translate-y-3 peer-focus:scale-75 peer-focus:text-green-600"
+            >
+              Mobile Number
+            </label>
           </div>
 
-          <div className="flex items-center justify-between mt-4">
-            <button
-              type="submit"
-              disabled={submitting}
-              className="px-4 py-2 bg-green-600 text-white rounded disabled:opacity-60"
+          {/* Resume File Upload */}
+          <div className="relative pt-4">
+            <label
+              htmlFor="resume"
+              className="block mb-1 font-medium text-gray-700"
             >
-              {submitting ? "Submitting..." : "Submit Application"}
-            </button>
-
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-3 py-2 bg-gray-100 rounded"
-            >
-              Cancel
-            </button>
+              Resume
+            </label>
+            <input
+              id="resume"
+              type="file"
+              accept=".pdf,.doc,.docx"
+              onChange={handleFile}
+              className="w-full"
+            />
           </div>
+
+          <button
+            type="submit"
+            className="bg-green-600 text-white px-4 py-2 rounded w-full hover:bg-green-700 transition"
+          >
+            Submit Application
+          </button>
         </form>
       </div>
     </div>

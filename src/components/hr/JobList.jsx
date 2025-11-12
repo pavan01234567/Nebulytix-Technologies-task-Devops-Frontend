@@ -12,10 +12,12 @@ export default function JobList({ refreshKey = 0 }) {
     let mounted = true;
     setLoading(true);
     axios
-      .get(`${BACKEND_BASE_URL}/jobs`)
+      .get(`${BACKEND_BASE_URL}/hr/allJobs`)
       .then((res) => {
         if (!mounted) return;
-        setJobs(Array.isArray(res.data) ? res.data : []);
+        const data = Array.isArray(res.data.data) ? res.data.data : [];
+        console.log(data);
+        setJobs(data);
       })
       .catch((err) => {
         console.error(err);
