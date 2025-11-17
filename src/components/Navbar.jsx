@@ -38,13 +38,21 @@ export default function Navbar() {
           >
             Career
           </NavLink>
-           <NavLink
+          <NavLink
             to="/contacts"
             className={({ isActive }) =>
               isActive ? "text-sky-600 font-semibold" : "text-gray-700"
             }
           >
             Contact
+          </NavLink>
+           <NavLink
+            to="/About"
+            className={({ isActive }) =>
+              isActive ? "text-sky-600 font-semibold" : "text-gray-700"
+            }
+          >
+            about
           </NavLink>
         </div>
 

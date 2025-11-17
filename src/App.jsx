@@ -8,12 +8,14 @@ import AdminDashboard from "./pages/AdminDashboard";
 import EmployeeDashboard from "./pages/EmployeeDashboard";
 import JobDetails from "./pages/JobDetails";
 import ViewReport from "./pages/ViewReport";
+// import Contacts from "./pages/Contacts";
 
 export default function App() {
   return (
     <Routes>
       <Route path="/" element={<Home />} />
       <Route path="/career" element={<Career />} />
+      {/* <Route path="/Contacts" element={<Contacts />} /> */}
       <Route path="/career/job/:id" element={<JobDetails />} />{" "}
       {/* new route */}
       {/* Login */}
