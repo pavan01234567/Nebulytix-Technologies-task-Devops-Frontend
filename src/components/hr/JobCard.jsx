@@ -8,7 +8,8 @@ export default function JobCard({ job }) {
       <div>
         <div className="font-semibold">{job.jobTitle}</div>
         <div className="text-sm text-gray-600 mt-1">
-          {job.description || job.desc}
+          {job.experienceLevel
+ || job.experience}
         </div>
       </div>
       <div>
