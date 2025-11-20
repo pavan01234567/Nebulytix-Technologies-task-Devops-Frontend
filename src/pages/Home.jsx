@@ -11,6 +11,33 @@ import NEB1 from "../assets/images/NEB1.jpg";
 import NEB2 from "../assets/images/NEB2.jpg";
 import NEB3 from "../assets/images/NEB3.jpg";
 
+import {
+  Code2,
+  Cpu,
+  Server,
+  Braces,
+  Boxes,
+  BarChart3
+} from "lucide-react";  
+
+import { Search, ClipboardList,  Rocket } from "lucide-react";
+
+
+import {
+  Stethoscope,
+  Landmark,
+  ShoppingCart,
+  Factory,
+  Laptop,
+  GraduationCap,
+  Car,
+  Truck
+} from "lucide-react";
+
+
+
+
+
 
 export default function Home() {
   const images = [hero1, hero2, hero3, NEB1 , NEB2, NEB3];
@@ -99,7 +126,12 @@ export default function Home() {
         >
           <Carousel images={images} />
         </motion.div>
-      </section>
+      </section>   
+
+
+
+
+      
 
       {/* SERVICES */}
       <section className="container mx-auto px-6 py-20">
@@ -156,25 +188,38 @@ export default function Home() {
       className="text-4xl font-bold text-center">
       Technologies We Work With
     </motion.h2>
+
     <p className="text-gray-600 text-center mt-3 mb-10 max-w-2xl mx-auto">
       We use modern, enterprise-grade technologies to build secure & scalable products.
     </p>
 
     <div className="grid grid-cols-2 md:grid-cols-6 gap-8 text-center">
+
       {[
-        "JAVA", "REACT", "Node.js",
-     "Python",
-        "Docker","MongoDB",
-        "MySQL", "DATAANALYST"
+        { name: "JAVA", icon: <Code2 size={32} className="mx-auto mb-3" /> },
+        { name: "REACT", icon: <Cpu size={32} className="mx-auto mb-3" /> },
+        { name: "Node.js", icon: <Server size={32} className="mx-auto mb-3" /> },
+        { name: "Python", icon: <Braces size={32} className="mx-auto mb-3" /> },
+        { name: "Docker", icon: <Boxes size={32} className="mx-auto mb-3" /> },
+        { name: "DATA ANALYST", icon: <BarChart3 size={32} className="mx-auto mb-3" /> },
       ].map((tech, i) => (
-        <motion.div key={i} variants={scaleUp} initial="hidden" whileInView="show" viewport={{ once: true }}
-          className="p-4 bg-white shadow rounded-xl">
-          <p className="font-semibold">{tech}</p>
+        <motion.div
+          key={i}
+          variants={scaleUp}
+          initial="hidden"
+          whileInView="show"
+          viewport={{ once: true }}
+          className="p-4 bg-white shadow rounded-xl"
+        >
+          {tech.icon}
+          <p className="font-semibold">{tech.name}</p>
         </motion.div>
       ))}
+
     </div>
   </div>
 </section>
+
 
 {/* INDUSTRIES WE SERVE */}
 <section className="bg-white py-20">
@@ -189,22 +234,30 @@ export default function Home() {
     </p>
 
     <div className="grid md:grid-cols-4 gap-8">
-      {[
-        "Healthcare",
-        "Finance & Banking",
-        "Retail & E-commerce",
-        "Manufacturing",
-        "IT & SaaS",
-        "Education",
-        "Automobile",
-        "Logistics"
-      ].map((i, index) => (
-        <motion.div key={index} variants={scaleUp} initial="hidden" whileInView="show"
-          viewport={{ once: true }} className="p-8 bg-gray-50 rounded-xl shadow text-center">
-          <h3 className="font-bold text-xl">{i}</h3>
-        </motion.div>
-      ))}
-    </div>
+  {[
+    { name: "Healthcare", icon: Stethoscope },
+    { name: "Finance & Banking", icon: Landmark },
+    { name: "Retail & E-commerce", icon: ShoppingCart },
+    { name: "Manufacturing", icon: Factory },
+    { name: "IT & SaaS", icon: Laptop },
+    { name: "Education", icon: GraduationCap },
+    { name: "Automobile", icon: Car },
+    { name: "Logistics", icon: Truck }
+  ].map((item, index) => (
+    <motion.div
+      key={index}
+      variants={scaleUp}
+      initial="hidden"
+      whileInView="show"
+      viewport={{ once: true }}
+      className="p-6 bg-gray-50 rounded-xl shadow text-center hover:shadow-md transition"
+    >
+      <item.icon className="mx-auto mb-3 w-8 h-8 text-black" />
+      <h3 className="font-bold text-lg">{item.name}</h3>
+    </motion.div>
+  ))}
+</div>
+
   </div>
 </section>
 
@@ -243,14 +296,17 @@ export default function Home() {
 
     <div className="grid md:grid-cols-4 gap-10 mt-10">
       {[
-        "1. Discovery",
-        "2. Planning",
-        "3. Development",
-        "4. Deployment"
+        { title: "1. Discovery", icon: <Search size={32} className="mx-auto mb-4" /> },
+        { title: "2. Planning", icon: <ClipboardList size={32} className="mx-auto mb-4" /> },
+        { title: "3. Development", icon: <Code2 size={32} className="mx-auto mb-4" /> },
+        { title: "4. Deployment", icon: <Rocket size={32} className="mx-auto mb-4" /> }
       ].map((step, i) => (
         <motion.div key={i} variants={scaleUp} initial="hidden" whileInView="show"
           className="p-8 bg-gray-50 rounded-2xl shadow text-center font-semibold">
-          {step}
+          
+          {step.icon}
+          <p>{step.title}</p>
+
         </motion.div>
       ))}
     </div>

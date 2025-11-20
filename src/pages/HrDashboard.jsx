@@ -5,7 +5,7 @@ import AddHrForm from "../components/admin/AddHrForm";
 import AddJobForm from "../components/hr/AddJobForm";
 import JobList from "../components/hr/JobList";
 import EmployeeList from "../components/hr/EmployeeList";
-import { Menu, UserPlus, Briefcase, FileText, LogOut } from "lucide-react";
+import { Menu, UserPlus, Briefcase, LogOut } from "lucide-react";
 
 export default function HrDashboard() {
   const navigate = useNavigate();
@@ -31,11 +31,11 @@ export default function HrDashboard() {
       <h1 className="text-3xl font-bold text-center text-sky-700 mb-4">
         HR Dashboard
       </h1>
+
       {/* Top Section */}
       <div className="bg-sky-100 rounded-lg p-6 shadow relative">
-        {/* Flex container: HR Info left, Menu right */}
         <div className="flex items-start justify-between w-full">
-          {/* HR Info (fills the box properly) */}
+          {/* HR Info */}
           <div className="flex-1 whitespace-pre-line">
             <HrInfo role="hr" refreshKey={refreshKey} />
           </div>
@@ -68,15 +68,6 @@ export default function HrDashboard() {
                 >
                   <Briefcase size={18} className="text-purple-700" />
                   Add Job
-                </button>
-
-                {/* View Report */}
-                <button
-                  onClick={() => navigate("/admin/view-report")}
-                  className="flex items-center gap-2 w-full px-4 py-2 text-left hover:bg-sky-50 rounded"
-                >
-                  <FileText size={18} className="text-blue-700" />
-                  View Report
                 </button>
 
                 {/* Logout */}
