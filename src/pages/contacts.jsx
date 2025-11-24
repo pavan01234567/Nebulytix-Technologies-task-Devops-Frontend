@@ -166,7 +166,7 @@ const ContactPage = () => {
 
   return (
     <>
-    < Navbar />
+    
 
     <div className="min-h-screen bg-gray-100">
 

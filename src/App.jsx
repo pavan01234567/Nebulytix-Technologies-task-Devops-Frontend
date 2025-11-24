@@ -31,6 +31,7 @@ export default function App() {
       <Route path="/employee" element={<EmployeeDashboard />} />
       <Route path="/admin/view-report" element={<ViewReport />} />
       <Route path="/hr/job/:id/applications" element={<JobApplications />} />
+      <Route path="/view-daily-report" element={<ViewDailyReport />} />
     </Routes>
   );
 }
