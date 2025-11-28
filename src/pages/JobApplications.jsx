@@ -3,6 +3,7 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { BACKEND_BASE_URL, BASE_URL } from "../api/config";
+import { Mail, Eye } from "lucide-react";
 
 export default function JobApplications() {
   const { id: jobId } = useParams();
@@ -25,12 +26,17 @@ export default function JobApplications() {
   const mountedRef = useRef(true);
   const searchTimer = useRef(null);
 
-  // NEW: email popup states
+  // email popup states
   const [openMailBox, setOpenMailBox] = useState(false);
-  const [mailType, setMailType] = useState(""); // "SHORTLISTED" or "REJECTED"
+  const [mailType, setMailType] = useState(""); 
+  // "SHORTLISTED" | "REJECTED" for bulk
+  // "INVITED_SINGLE" | "TERMINATED_SINGLE" for individual
   const [mailSubject, setMailSubject] = useState("");
   const [mailMessage, setMailMessage] = useState("");
   const [sendingMail, setSendingMail] = useState(false);
+
+  // for individual mail
+  const [mailTargetApp, setMailTargetApp] = useState(null); // null => bulk, object => single applicant
 
   useEffect(() => {
     mountedRef.current = true;
@@ -118,7 +124,12 @@ export default function JobApplications() {
     const newStatus = shortlist ? "SHORTLISTED" : "REJECTED";
 
     const statusUpper = String(original.status || "").toUpperCase();
-    if (statusUpper.includes("SHORT") || statusUpper.includes("REJECT")) {
+    if (
+      statusUpper.includes("SHORT") ||
+      statusUpper.includes("REJECT") ||
+      statusUpper.includes("INVITED") ||
+      statusUpper.includes("TERMINATED")
+    ) {
       setUpdatingAppId(null);
       return;
     }
@@ -138,7 +149,7 @@ export default function JobApplications() {
     }
   };
 
-  // NEW: send mail function
+  // send mail function (bulk + individual)
   const sendMail = async () => {
     if (!mailSubject.trim() || !mailMessage.trim()) {
       alert("Subject and message are required.");
@@ -150,16 +161,47 @@ export default function JobApplications() {
     try {
       const body = { subject: mailSubject, message: mailMessage };
 
-      if (mailType === "SHORTLISTED") {
-        await axios.post(
-          `${BACKEND_BASE_URL}/hr/job/sendShortlistedEmails`,
-          body
-        );
-      } else if (mailType === "REJECTED") {
-        await axios.post(
-          `${BACKEND_BASE_URL}/hr/job/sendRejectedEmails`,
-          body
-        );
+      if (mailTargetApp) {
+        // === Individual mail ===
+        if (mailType === "INVITED_SINGLE") {
+          // Invite: backend sets status = INVITED
+          await axios.post(
+            `${BACKEND_BASE_URL}/hr/job/sendInvitedEmail/${mailTargetApp.id}`,
+            body
+          );
+          updateLocal(mailTargetApp.id, { status: "INVITED" });
+        } else if (mailType === "TERMINATED_SINGLE") {
+          // Reject: backend sets status = TERMINATED
+          await axios.post(
+            `${BACKEND_BASE_URL}/hr/job/sendRejectedEmail/${mailTargetApp.id}`,
+            body
+          );
+          updateLocal(mailTargetApp.id, { status: "TERMINATED" });
+        } else {
+          // fallback: default to invited if somehow not set
+          await axios.post(
+            `${BACKEND_BASE_URL}/hr/job/sendInvitedEmail/${mailTargetApp.id}`,
+            body
+          );
+          updateLocal(mailTargetApp.id, { status: "INVITED" });
+        }
+      } else {
+        // === Bulk mail ===
+        if (mailType === "SHORTLISTED") {
+          await axios.post(
+            `${BACKEND_BASE_URL}/hr/job/sendShortlistedEmails`,
+            body
+          );
+          // backend may or may not update status for bulk; 
+          // we are not changing local status here
+        } else if (mailType === "REJECTED") {
+          await axios.post(
+            `${BACKEND_BASE_URL}/hr/job/sendRejectedEmails`,
+            body
+          );
+          // bulk: backend currently not setting TERMINATED per applicant;
+          // they remain REJECTED in UI unless you later send individual mail.
+        }
       }
 
       alert("Email sent successfully!");
@@ -167,6 +209,7 @@ export default function JobApplications() {
       setMailSubject("");
       setMailMessage("");
       setMailType("");
+      setMailTargetApp(null);
     } catch (e) {
       console.error("Failed to send email", e);
       alert("Failed to send email.");
@@ -182,25 +225,46 @@ export default function JobApplications() {
   };
 
   const statusBadge = (status) => {
-    if (!status) return null;
+    if (!status) {
+      return (
+        <span className="px-3 py-1 bg-yellow-50 text-yellow-700 rounded text-xs font-medium">
+          PENDING
+        </span>
+      );
+    }
+
     const s = String(status).toUpperCase();
+
+    if (s.includes("INVITED"))
+      return (
+        <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded font-semibold text-xs">
+          INVITED
+        </span>
+      );
+
+    if (s.includes("TERMINATED"))
+      return (
+        <span className="px-3 py-1 bg-red-100 text-red-700 rounded font-semibold text-xs">
+          TERMINATED
+        </span>
+      );
 
     if (s.includes("SHORT"))
       return (
-        <span className="px-3 py-1 bg-green-100 text-green-700 rounded font-semibold">
+        <span className="px-3 py-1 bg-green-100 text-green-700 rounded font-semibold text-xs">
           SHORTLISTED
         </span>
       );
 
     if (s.includes("REJECT"))
       return (
-        <span className="px-3 py-1 bg-red-100 text-red-700 rounded font-semibold">
+        <span className="px-3 py-1 bg-red-100 text-red-700 rounded font-semibold text-xs">
           REJECTED
         </span>
       );
 
     return (
-      <span className="px-3 py-1 bg-gray-100 text-gray-700 rounded">
+      <span className="px-3 py-1 bg-gray-100 text-gray-700 rounded text-xs">
         {status}
       </span>
     );
@@ -209,14 +273,26 @@ export default function JobApplications() {
   const finalList = useMemo(() => {
     let list = [...applications];
 
+    const byStatus = (a) => (a.status || "").toUpperCase();
+
     if (filter === "SHORTLISTED")
-      list = list.filter((a) =>
-        (a.status || "").toUpperCase().includes("SHORT")
-      );
+      list = list.filter((a) => byStatus(a).includes("SHORT"));
     else if (filter === "REJECTED")
-      list = list.filter((a) =>
-        (a.status || "").toUpperCase().includes("REJECT")
-      );
+      list = list.filter((a) => byStatus(a).includes("REJECT"));
+    else if (filter === "PENDING")
+      list = list.filter((a) => {
+        const s = byStatus(a);
+        return (
+          !s.includes("SHORT") &&
+          !s.includes("REJECT") &&
+          !s.includes("INVITED") &&
+          !s.includes("TERMINATED")
+        );
+      });
+    else if (filter === "INVITED")
+      list = list.filter((a) => byStatus(a).includes("INVITED"));
+    else if (filter === "TERMINATED")
+      list = list.filter((a) => byStatus(a).includes("TERMINATED"));
 
     if (searchValue) {
       list = list.filter((a) =>
@@ -228,10 +304,16 @@ export default function JobApplications() {
 
     list.sort((a, b) => {
       if (sortBy === "NEWEST")
-        return new Date(b.applicationDate || 0) - new Date(a.applicationDate || 0);
+        return (
+          new Date(b.applicationDate || 0) -
+          new Date(a.applicationDate || 0)
+        );
 
       if (sortBy === "OLDEST")
-        return new Date(a.applicationDate || 0) - new Date(b.applicationDate || 0);
+        return (
+          new Date(a.applicationDate || 0) -
+          new Date(b.applicationDate || 0)
+        );
 
       if (sortBy === "AZ")
         return (a.fullName || "").localeCompare(b.fullName || "");
@@ -245,8 +327,35 @@ export default function JobApplications() {
     return list;
   }, [applications, filter, searchValue, sortBy]);
 
-  if (loading) return <div className="p-6 text-gray-600">Loading applications...</div>;
+  if (loading)
+    return <div className="p-6 text-gray-600">Loading applications...</div>;
   if (error) return <div className="p-6 text-red-600">{error}</div>;
+
+  const totalShortlisted = applications.filter((a) =>
+    (a.status || "").toUpperCase().includes("SHORT")
+  ).length;
+
+  const totalRejected = applications.filter((a) =>
+    (a.status || "").toUpperCase().includes("REJECT")
+  ).length;
+
+  const totalPending = applications.filter((a) => {
+    const s = (a.status || "").toUpperCase();
+    return (
+      !s.includes("SHORT") &&
+      !s.includes("REJECT") &&
+      !s.includes("INVITED") &&
+      !s.includes("TERMINATED")
+    );
+  }).length;
+
+  const totalInvited = applications.filter((a) =>
+    (a.status || "").toUpperCase().includes("INVITED")
+  ).length;
+
+  const totalTerminated = applications.filter((a) =>
+    (a.status || "").toUpperCase().includes("TERMINATED")
+  ).length;
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -254,9 +363,12 @@ export default function JobApplications() {
       <div className="flex flex-col md:flex-row md:justify-between md:items-start gap-6 mb-6">
         <div>
           <h1 className="text-2xl font-semibold">
-            Applications for:{" "}
-            <span className="text-sky-700">{jobDetails?.title || "—"}</span>
-          </h1>
+  Applications for:{" "}
+  <span className="text-sky-700">
+    {jobDetails?.jobTitle || jobDetails?.title || "—"}
+  </span>
+</h1>
+
           <p className="text-gray-600 text-sm mt-1">
             Job ID: {jobId} · Total Applicants:
             <span className="font-semibold text-indigo-600">
@@ -266,7 +378,7 @@ export default function JobApplications() {
           </p>
 
           {/* Tabs */}
-          <div className="mt-4 flex gap-3">
+          <div className="mt-4 flex gap-3 flex-wrap">
             <button
               onClick={() => setFilter("ALL")}
               className={`px-4 py-2 rounded ${
@@ -275,6 +387,7 @@ export default function JobApplications() {
             >
               All ({applications.length})
             </button>
+
             <button
               onClick={() => setFilter("SHORTLISTED")}
               className={`px-4 py-2 rounded ${
@@ -283,14 +396,9 @@ export default function JobApplications() {
                   : "bg-gray-200"
               }`}
             >
-              Shortlisted (
-              {
-                applications.filter((a) =>
-                  (a.status || "").toUpperCase().includes("SHORT")
-                ).length
-              }
-              )
+              Shortlisted ({totalShortlisted})
             </button>
+
             <button
               onClick={() => setFilter("REJECTED")}
               className={`px-4 py-2 rounded ${
@@ -299,48 +407,98 @@ export default function JobApplications() {
                   : "bg-gray-200"
               }`}
             >
-              Rejected (
-              {
-                applications.filter((a) =>
-                  (a.status || "").toUpperCase().includes("REJECT")
-                ).length
-              }
-              )
+              Rejected ({totalRejected})
+            </button>
+
+            <button
+              onClick={() => setFilter("PENDING")}
+              className={`px-4 py-2 rounded ${
+                filter === "PENDING"
+                  ? "bg-yellow-500 text-white"
+                  : "bg-gray-200"
+              }`}
+            >
+              Pending ({totalPending})
+            </button>
+
+            <button
+              onClick={() => setFilter("INVITED")}
+              className={`px-4 py-2 rounded ${
+                filter === "INVITED"
+                  ? "bg-blue-600 text-white"
+                  : "bg-gray-200"
+              }`}
+            >
+              Invited ({totalInvited})
+            </button>
+
+            <button
+              onClick={() => setFilter("TERMINATED")}
+              className={`px-4 py-2 rounded ${
+                filter === "TERMINATED"
+                  ? "bg-red-700 text-white"
+                  : "bg-gray-200"
+              }`}
+            >
+              Terminated ({totalTerminated})
             </button>
           </div>
         </div>
 
-        {/* Controls */}
-        <div className="flex items-center gap-3">
-          <select
-            className="border px-3 py-2 rounded"
-            value={sortBy}
-            onChange={(e) => setSortBy(e.target.value)}
-          >
-            <option value="NEWEST">Newest</option>
-            <option value="OLDEST">Oldest</option>
-            <option value="AZ">A–Z</option>
-            <option value="ZA">Z–A</option>
-          </select>
+        {/* Controls + top-right bulk mail button */}
+        <div className="flex flex-col items-end gap-3">
+          <div className="flex items-center gap-3">
+            <select
+              className="border px-3 py-2 rounded"
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value)}
+            >
+              <option value="NEWEST">Newest</option>
+              <option value="OLDEST">Oldest</option>
+              <option value="AZ">A–Z</option>
+              <option value="ZA">Z–A</option>
+            </select>
 
-          <input
-            type="text"
-            className="border px-3 py-2 rounded w-64"
-            placeholder="Search name, email, phone"
-            value={searchInput}
-            onChange={(e) => setSearchInput(e.target.value)}
-          />
+            <input
+              type="text"
+              className="border px-3 py-2 rounded w-64"
+              placeholder="Search name, email, phone"
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
+            />
 
-          <button
-            onClick={() => navigate(-1)}
-            className="px-4 py-2 bg-gray-200 rounded"
-          >
-            Back
-          </button>
+            <button
+              onClick={() => navigate(-1)}
+              className="px-4 py-2 bg-gray-200 rounded"
+            >
+              Back
+            </button>
+          </div>
+
+          {(filter === "SHORTLISTED" || filter === "REJECTED") && (
+            <button
+              onClick={() => {
+                // bulk mail for shortlisted/rejected
+                setMailType(filter); // "SHORTLISTED" or "REJECTED"
+                setMailTargetApp(null); // bulk mode
+                setOpenMailBox(true);
+              }}
+              className={`px-4 py-2 rounded text-white flex items-center gap-2 ${
+                filter === "SHORTLISTED"
+                  ? "bg-green-600 hover:bg-green-700"
+                  : "bg-red-600 hover:bg-red-700"
+              }`}
+            >
+              <Mail className="w-4 h-4" />
+              {filter === "SHORTLISTED"
+                ? "Send mail to all shortlisted"
+                : "Send mail to all rejected"}
+            </button>
+          )}
         </div>
       </div>
 
-      {/* List + bottom mail button (Option B) */}
+      {/* List */}
       {finalList.length === 0 ? (
         <div className="p-6 border rounded text-gray-600">
           No applications found.
@@ -348,57 +506,73 @@ export default function JobApplications() {
       ) : (
         <>
           <div className="space-y-3">
-            {finalList.map((app) => (
-              <div
-                key={app.id}
-                className="p-4 border bg-white rounded shadow-sm flex items-center justify-between gap-4"
-              >
-                <div>
-                  <div className="flex items-center gap-4">
-                    <div className="font-medium">{app.fullName}</div>
-                    <div className="text-sm text-gray-500">{app.email}</div>
-                    <div className="text-sm text-gray-500">
-                      · {app.phoneNumber}
+            {finalList.map((app) => {
+              const statusUpper = (app.status || "").toUpperCase();
+
+              const canSendIndividual =
+                (filter === "SHORTLISTED" && statusUpper.includes("SHORT")) ||
+                (filter === "REJECTED" && statusUpper.includes("REJECT"));
+
+              return (
+                <div
+                  key={app.id}
+                  className="p-4 border bg-white rounded shadow-sm flex items-center justify-between gap-4"
+                >
+                  <div className="flex flex-col gap-1">
+                    <div className="flex items-center gap-4 flex-wrap">
+                      <div className="font-medium">{app.fullName}</div>
+                      <div className="text-sm text-gray-500">{app.email}</div>
+                      <div className="text-sm text-gray-500">
+                        · {app.phoneNumber}
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <div className="text-xs text-gray-500">
+                        {fmtDate(app.applicationDate)}
+                      </div>
+                      {statusBadge(app.status)}
                     </div>
                   </div>
-                  <div className="text-xs text-gray-500 mt-1">
-                    {fmtDate(app.applicationDate)}
+
+                  <div className="flex items-center gap-2">
+                    {canSendIndividual && (
+                      <button
+                        onClick={() => {
+                          // from shortlisted tab → invite
+                          // from rejected tab → terminate
+                          if (statusUpper.includes("SHORT")) {
+                            setMailType("INVITED_SINGLE");
+                          } else if (statusUpper.includes("REJECT")) {
+                            setMailType("TERMINATED_SINGLE");
+                          } else {
+                            setMailType("");
+                          }
+                          setMailTargetApp(app);
+                          setOpenMailBox(true);
+                        }}
+                        className="flex items-center gap-1 px-3 py-1 border border-sky-600 text-sky-600 rounded hover:bg-sky-50 text-sm"
+                      >
+                        <Mail className="w-4 h-4" />
+                        Send mail
+                      </button>
+                    )}
+
+                    <button
+                      onClick={() => setSelectedApp(app)}
+                      className="flex items-center gap-1 px-3 py-1 border border-sky-600 text-sky-600 rounded hover:bg-sky-50 text-sm"
+                    >
+                      <Eye className="w-4 h-4" />
+                      View
+                    </button>
                   </div>
                 </div>
-
-                <button
-                  onClick={() => setSelectedApp(app)}
-                  className="px-3 py-1 bg-sky-600 text-white rounded"
-                >
-                  View
-                </button>
-              </div>
-            ))}
+              );
+            })}
           </div>
-
-          {(filter === "SHORTLISTED" || filter === "REJECTED") && (
-            <div className="mt-4 flex justify-end">
-              <button
-                onClick={() => {
-                  setMailType(filter); // "SHORTLISTED" or "REJECTED"
-                  setOpenMailBox(true);
-                }}
-                className={`px-4 py-2 rounded text-white ${
-                  filter === "SHORTLISTED"
-                    ? "bg-green-600 hover:bg-green-700"
-                    : "bg-red-600 hover:bg-red-700"
-                }`}
-              >
-                {filter === "SHORTLISTED"
-                  ? "Send Mail to All Shortlisted"
-                  : "Send Mail to All Rejected"}
-              </button>
-            </div>
-          )}
         </>
       )}
 
-      {/* --- PROFESSIONAL SLIDE-IN PANEL --- */}
+      {/* Slide-in panel */}
       {selectedApp && (
         <>
           <div
@@ -423,7 +597,9 @@ export default function JobApplications() {
                   <h2 className="text-xl font-semibold">
                     {selectedApp.fullName}
                   </h2>
-                  <p className="text-xs text-white/90">{selectedApp.email}</p>
+                  <p className="text-xs text-white/90">
+                    {selectedApp.email}
+                  </p>
                   <p className="text-xs text-white/90">
                     {selectedApp.phoneNumber}
                   </p>
@@ -450,7 +626,9 @@ export default function JobApplications() {
               {/* Status */}
               <div className="bg-gray-50 p-4 rounded-xl border">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-lg font-semibold">Application Status</h3>
+                  <h3 className="text-lg font-semibold">
+                    Application Status
+                  </h3>
                   {statusBadge(selectedApp.status)}
                 </div>
 
@@ -459,7 +637,13 @@ export default function JobApplications() {
                   .includes("SHORT") &&
                 !String(selectedApp.status)
                   .toUpperCase()
-                  .includes("REJECT") ? (
+                  .includes("REJECT") &&
+                !String(selectedApp.status)
+                  .toUpperCase()
+                  .includes("INVITED") &&
+                !String(selectedApp.status)
+                  .toUpperCase()
+                  .includes("TERMINATED") ? (
                   <div className="mt-4 flex gap-3">
                     <button
                       onClick={() =>
@@ -527,7 +711,9 @@ export default function JobApplications() {
 
               {/* Additional Info */}
               <div className="bg-gray-50 p-5 rounded-xl border">
-                <h3 className="text-lg font-semibold mb-2">Additional Info</h3>
+                <h3 className="text-lg font-semibold mb-2">
+                  Additional Info
+                </h3>
                 <p className="text-sm text-gray-600">
                   Email: <strong>{selectedApp.email}</strong>
                 </p>
@@ -583,7 +769,10 @@ export default function JobApplications() {
               <button
                 className="px-3 py-1 bg-blue-600 text-white rounded"
                 onClick={() =>
-                  updateStatus(confirmAction.app, confirmAction.shortlist)
+                  updateStatus(
+                    confirmAction.app,
+                    confirmAction.shortlist
+                  )
                 }
               >
                 Confirm
@@ -598,14 +787,26 @@ export default function JobApplications() {
         <>
           <div
             className="fixed inset-0 bg-black/40 z-50"
-            onClick={() => setOpenMailBox(false)}
+            onClick={() => {
+              setOpenMailBox(false);
+              setMailTargetApp(null);
+              setMailType("");
+            }}
           />
 
           <div className="fixed top-[20%] left-1/2 -translate-x-1/2 bg-white shadow-xl rounded p-6 z-50 w-full max-w-lg">
             <h3 className="text-lg font-semibold mb-2">
-              Send Email to All{" "}
-              {mailType === "SHORTLISTED" ? "Shortlisted" : "Rejected"}{" "}
-              Applicants
+              {mailTargetApp
+                ? mailType === "INVITED_SINGLE"
+                  ? `Send Invite Email to ${mailTargetApp.fullName}`
+                  : mailType === "TERMINATED_SINGLE"
+                  ? `Send Rejection Email to ${mailTargetApp.fullName}`
+                  : `Send Email to ${mailTargetApp.fullName}`
+                : `Send Email to All ${
+                    mailType === "SHORTLISTED"
+                      ? "Shortlisted"
+                      : "Rejected"
+                  } Applicants`}
             </h3>
 
             <input
@@ -625,7 +826,11 @@ export default function JobApplications() {
 
             <div className="flex justify-end gap-3 mt-4">
               <button
-                onClick={() => setOpenMailBox(false)}
+                onClick={() => {
+                  setOpenMailBox(false);
+                  setMailTargetApp(null);
+                  setMailType("");
+                }}
                 className="px-3 py-1 bg-gray-200 rounded"
               >
                 Cancel
