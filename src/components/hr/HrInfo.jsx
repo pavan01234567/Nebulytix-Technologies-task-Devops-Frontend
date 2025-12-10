@@ -81,6 +81,13 @@ export default function HrInfo({ role = "hr", refreshKey = 0 }) {
     return `${BASE_URL}/${url}`;
   }
 
+  // Dynamic upload endpoint
+  function getUploadPath() {
+    if (role === "admin") return `/admin/${profile.id}/profile-picture`;
+    if (role === "hr") return `/hr/${profile.id}/profile-picture`;
+    return `/employee/${profile.id}/profile-picture`;
+  }
+
   async function handlePhotoUpload(e) {
     const file = e.target.files[0];
     if (!file || !profile?.id) return;
@@ -92,7 +99,7 @@ export default function HrInfo({ role = "hr", refreshKey = 0 }) {
       const token = localStorage.getItem("neb_token");
 
       const res = await axios.put(
-        `${BACKEND_BASE_URL}/employee/${profile.id}/profile-picture`,
+        `${BACKEND_BASE_URL}${getUploadPath()}`,
         formData,
         {
           headers: {
@@ -121,10 +128,9 @@ export default function HrInfo({ role = "hr", refreshKey = 0 }) {
     try {
       const token = localStorage.getItem("neb_token");
 
-      await axios.delete(
-        `${BACKEND_BASE_URL}/employee/${profile.id}/profile-picture`,
-        { headers: token ? { Authorization: `Bearer ${token}` } : {} }
-      );
+      await axios.delete(`${BACKEND_BASE_URL}${getUploadPath()}`, {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
 
       const updated = { ...profile, profilePictureUrl: null };
       setProfile(updated);
@@ -136,8 +142,13 @@ export default function HrInfo({ role = "hr", refreshKey = 0 }) {
     }
   }
 
-  if (loading) return <div className="p-4 bg-white rounded shadow">Loading…</div>;
-  if (error) return <div className="p-4 bg-white rounded shadow text-red-600">{error}</div>;
+  if (loading)
+    return <div className="p-4 bg-white rounded shadow">Loading…</div>;
+
+  if (error)
+    return (
+      <div className="p-4 bg-white rounded shadow text-red-600">{error}</div>
+    );
 
   const {
     firstName,
@@ -160,10 +171,8 @@ export default function HrInfo({ role = "hr", refreshKey = 0 }) {
   return (
     <>
       <div className="p-4 bg-white rounded shadow flex gap-6">
-
-        {/* LEFT SIDE IMAGE + MENU */}
+        {/* LEFT SIDE IMAGE */}
         <div className="flex flex-col items-center gap-2 relative">
-
           <div className="relative">
             <img
               src={displayImageSrc}
@@ -178,39 +187,27 @@ export default function HrInfo({ role = "hr", refreshKey = 0 }) {
               <Pencil className="w-4 h-4 text-sky-700" />
             </button>
 
-            {/* FULL THEME POPUP (REFERENCE MATCHED) */}
+            {/* POPUP MENU */}
             {showMenu && (
               <div
                 className="fixed inset-0 z-40"
                 onClick={() => setShowMenu(false)}
               >
                 <div
-                  className="
-                    absolute z-50 
-                    bg-[#141414]/95
-                    text-white 
-                    backdrop-blur-sm
-                    rounded-2xl 
-                    shadow-2xl 
-                    w-64
-                    p-3
-                  "
-                  style={{
-                    top: "130px",
-                    left: "220px",
-                  }}
+                  className="absolute z-50 bg-[#141414]/95 text-white backdrop-blur-sm rounded-2xl shadow-2xl w-64 p-3"
+                  style={{ top: "130px", left: "220px" }}
                   onClick={(e) => e.stopPropagation()}
                 >
-                  {/* Choose from library */}
                   <button
                     onClick={() => fileInputRef.current.click()}
                     className="flex items-center gap-4 p-3 rounded-xl hover:bg-white/10 w-full text-left"
                   >
                     <Image className="w-5 h-5 text-gray-300" />
-                    <span className="text-white text-sm">Choose from library</span>
+                    <span className="text-white text-sm">
+                      Choose from library
+                    </span>
                   </button>
 
-                  {/* Delete */}
                   <button
                     onClick={handleDeletePhoto}
                     className="flex items-center gap-4 p-3 rounded-xl hover:bg-red-900/30 text-red-500 w-full text-left"
@@ -231,37 +228,44 @@ export default function HrInfo({ role = "hr", refreshKey = 0 }) {
               onChange={handlePhotoUpload}
             />
           </div>
-
           <div className="text-lg font-semibold text-center">
             {firstName} {lastName}
           </div>
         </div>
-        <div>
-          <div className="text-xs text-gray-500">Job Role / Domain</div>
-          <div>{jobRole ?? domain ?? "—"}</div>
-        </div>
-        {/* <div>
-          <div className="text-xs text-gray-500">Days Present</div>
-          <div>{daysPresent ?? "—"}</div>
-        </div> */}
-        <div>
-          <div className="text-xs text-gray-500">Paid Leaves</div>
-          <div>{paidLeaves ?? "—"}</div>
 
-        {/* RIGHT SIDE INFO */}
+        {/* RIGHT INFO */}
         <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm text-gray-700">
-          <div><div className="text-xs text-gray-500">Email</div>{email}</div>
-          <div><div className="text-xs text-gray-500">Mobile</div>{mobile}</div>
-          <div><div className="text-xs text-gray-500">Card Number</div>{cardNumber}</div>
-          <div><div className="text-xs text-gray-500">Gender</div>{gender}</div>
-          <div><div className="text-xs text-gray-500">Joining Date</div>{joiningDate ? new Date(joiningDate).toLocaleDateString() : "—"}</div>
-          <div><div className="text-xs text-gray-500">Job Role / Domain</div>{jobRole ?? domain}</div>
-          <div><div className="text-xs text-gray-500">Days Present</div>{daysPresent}</div>
-          <div><div className="text-xs text-gray-500">Paid Leaves</div>{paidLeaves}</div>
+          <div>
+            <div className="text-xs text-gray-500">Email</div>
+            {email}
+          </div>
+          <div>
+            <div className="text-xs text-gray-500">Mobile</div>
+            {mobile}
+          </div>
+          <div>
+            <div className="text-xs text-gray-500">Card Number</div>
+            {cardNumber}
+          </div>
+          <div>
+            <div className="text-xs text-gray-500">Gender</div>
+            {gender}
+          </div>
+          <div>
+            <div className="text-xs text-gray-500">Joining Date</div>
+            {joiningDate ? new Date(joiningDate).toLocaleDateString() : "—"}
+          </div>
+          <div>
+            <div className="text-xs text-gray-500">Job Role / Domain</div>
+            {jobRole ?? domain}
+          </div>
+          <div>
+            <div className="text-xs text-gray-500">Paid Leaves</div>
+            {paidLeaves ?? "—"}
+          </div>
         </div>
       </div>
-
-      {/* FULLSCREEN PHOTO */}
+      {/* FULLSCREEN PHOTO VIEW */}
       {viewPhoto && (
         <div
           className="fixed inset-0 bg-black/80 flex items-center justify-center z-50"
