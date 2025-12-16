@@ -1,87 +1,118 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axiosInstance from "../api/axiosInstance";
 
-// ADMIN
+/* ================= ADD ADMIN ================= */
 export const addAdmin = createAsyncThunk(
-  "users/addAdmin",
+  "userManagement/addAdmin",
   async (payload, thunkAPI) => {
     try {
-      const res = await axiosInstance.post("/admin/create", payload);
-      return res.data.message;
+      const res = await axiosInstance.post(
+        "/admin/create-admin",
+        payload
+      );
+      return res.data;
     } catch (err) {
       return thunkAPI.rejectWithValue(
-        err.response?.data?.message || "Failed to add admin"
+        err.response?.data?.message || "Failed to create admin"
       );
     }
   }
 );
 
-// EMPLOYEE / HR / MANAGER
+/* ================= ADD EMPLOYEE / HR / MANAGER ================= */
 export const addEmployee = createAsyncThunk(
-  "users/addEmployee",
-  async ({ role, data }, thunkAPI) => {
-    try {
-      const res = await axiosInstance.post(`/admin/create-${role}`, data);
-      return res.data.message;
-    } catch (err) {
-      return thunkAPI.rejectWithValue(
-        err.response?.data?.message || "Failed to add employee"
-      );
-    }
-  }
-);
-
-// CLIENT
-export const addClient = createAsyncThunk(
-  "users/addClient",
+  "userManagement/addEmployee",
   async (payload, thunkAPI) => {
     try {
-      const res = await axiosInstance.post("/admin/create-client", payload);
-      return res.data.message;
+      const res = await axiosInstance.post(
+        "/admin/create-employee",
+        payload
+      );
+      return res.data;
     } catch (err) {
       return thunkAPI.rejectWithValue(
-        err.response?.data?.message || "Failed to add client"
+        err.response?.data?.message || "Failed to create user"
       );
     }
   }
 );
 
+/* ================= ADD CLIENT ================= */
+export const addClient = createAsyncThunk(
+  "userManagement/addClient",
+  async (payload, thunkAPI) => {
+    try {
+      const res = await axiosInstance.post(
+        "/admin/create-client",
+        payload
+      );
+      return res.data;
+    } catch (err) {
+      return thunkAPI.rejectWithValue(
+        err.response?.data?.message || "Failed to create client"
+      );
+    }
+  }
+);
+
+/* ================= SLICE ================= */
 const userManagementSlice = createSlice({
   name: "userManagement",
   initialState: {
     loading: false,
-    success: null,
     error: null,
+    success: false,
   },
   reducers: {
     clearStatus: (state) => {
-      state.success = null;
+      state.loading = false;
       state.error = null;
+      state.success = false;
     },
   },
   extraReducers: (builder) => {
     builder
-      .addMatcher(
-        (a) => a.type.endsWith("/pending"),
-        (state) => {
-          state.loading = true;
-          state.error = null;
-        }
-      )
-      .addMatcher(
-        (a) => a.type.endsWith("/fulfilled"),
-        (state, action) => {
-          state.loading = false;
-          state.success = action.payload;
-        }
-      )
-      .addMatcher(
-        (a) => a.type.endsWith("/rejected"),
-        (state, action) => {
-          state.loading = false;
-          state.error = action.payload;
-        }
-      );
+      /* ADMIN */
+      .addCase(addAdmin.pending, (state) => {
+        state.loading = true;
+        state.success = false;
+      })
+      .addCase(addAdmin.fulfilled, (state) => {
+        state.loading = false;
+        state.success = true;
+      })
+      .addCase(addAdmin.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+
+      /* EMPLOYEE / HR / MANAGER */
+      .addCase(addEmployee.pending, (state) => {
+        state.loading = true;
+        state.success = false;
+      })
+      .addCase(addEmployee.fulfilled, (state) => {
+        state.loading = false;
+        state.success = true;
+      })
+      .addCase(addEmployee.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+
+      /* CLIENT */
+      .addCase(addClient.pending, (state) => {
+        state.loading = true;
+        state.success = false;
+      })
+      .addCase(addClient.fulfilled, (state) => {
+        state.loading = false;
+        state.success = true;
+      })
+      .addCase(addClient.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      });
   },
 });
 

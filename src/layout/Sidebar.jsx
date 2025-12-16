@@ -1,3 +1,4 @@
+//src/layout/Sidebar.jsx
 import { NavLink, useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { LayoutDashboard, UserPlus, Users, FileText } from "lucide-react";
