@@ -2,6 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ================= NAV ================= */
 .nav-btn {
   @apply flex items-center gap-3 p-3 rounded-lg text-gray-700 font-medium hover:bg-gray-100 transition;
 }
@@ -14,13 +15,40 @@
   @apply w-5 h-5;
 }
 
+/* ================= CARD ================= */
 .card {
-  @apply bg-white p-6 rounded-xl shadow-md border border-gray-200;
+  @apply bg-white p-6 rounded-xl border border-gray-200;
 }
 
+/* ================= SECTION ================= */
 .section-title {
-  @apply text-xl font-semibold mb-4 text-gray-800;
+  @apply text-[13px] font-semibold tracking-wide uppercase text-gray-800 mb-3;
 }
+
+/* ================= INPUTS (Keka-style) ================= */
+.input-base {
+  width: 100%;
+  background-color: #f9fafb;       /* subtle idle bg */
+  border: 1px solid #d1d5db;        /* gray-300 */
+  border-radius: 4px;
+  padding: 9px 12px;
+  font-size: 14px;
+  color: #111827;                   /* gray-900 */
+  transition: all 0.15s ease;
+}
+
+.input-base::placeholder {
+  color: #9ca3af;                   /* gray-400 */
+}
+
+.input-base:focus {
+  outline: none;
+  background-color: #ffffff;
+  border-color: #ec4899;            /* pink-500 */
+  box-shadow: 0 0 0 2px rgba(236, 72, 153, 0.25);
+}
+
+/* ================= ANIMATION ================= */
 @keyframes slideIn {
   from {
     transform: translateX(100%);
@@ -33,5 +61,50 @@
 }
 
 .animate-slideIn {
-  animation: slideIn .25s ease-out;
+  animation: slideIn 0.25s ease-out;
+}
+/* ===== KEKA TOP MODULE NAV ===== */
+
+.keka-nav {
+  background: linear-gradient(180deg, #0b2239, #081a2c);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.keka-nav-inner {
+  display: flex;
+  gap: 36px;
+  padding: 0 16px;
+  height: 44px;
+  align-items: center;
+}
+
+.keka-nav-item {
+  position: relative;
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.4px;
+  color: #9ca3af;
+  text-decoration: none;
+  padding-bottom: 6px;
+}
+
+.keka-nav-item:hover {
+  color: #e5e7eb;
+}
+
+.keka-nav-item.active {
+  color: #ffffff;
+}
+
+/* pink triangle like Keka */
+.keka-nav-item.active .keka-indicator {
+  position: absolute;
+  bottom: -6px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 6px solid transparent;
+  border-right: 6px solid transparent;
+  border-top: 6px solid #ec4899;
 }

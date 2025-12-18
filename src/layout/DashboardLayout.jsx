@@ -19,12 +19,15 @@ export default function DashboardLayout({ sidebar, children }) {
 
   return (
     <div className={`flex min-h-screen ${dark ? "dark:bg-gray-900" : ""}`}>
-      {/* Fixed Sidebar */}
+      {/* Sidebar */}
       {sidebar}
-      {/* Main Content */}
+
+      {/* Main Area */}
       <div className="flex-1 ml-20 bg-gray-100 dark:bg-gray-900 dark:text-white">
         <Topbar dark={dark} setDark={setDark} />
-        <div className="p-6">{children}</div>
+
+        {/* IMPORTANT: no padding here */}
+        <div>{children}</div>
       </div>
     </div>
   );

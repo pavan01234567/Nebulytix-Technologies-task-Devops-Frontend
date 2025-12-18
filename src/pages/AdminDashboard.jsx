@@ -13,7 +13,7 @@ export default function AdminDashboard() {
 
   return (
     <>
-      <h1 className="text-2xl font-bold">Admin Dashboard</h1>
+     
 
       {loading && <p>Loading...</p>}
       {error && <p className="text-red-600">{error}</p>}

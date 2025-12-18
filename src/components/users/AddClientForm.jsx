@@ -1,34 +1,81 @@
-// src/components/users/AddClientForm.jsx
-import { useDispatch } from "react-redux";
-import { addClient } from "../../store/userManagementSlice";
+import { useState } from "react";
 
 export default function AddClientForm() {
-  const dispatch = useDispatch();
+  const [form, setForm] = useState({
+    companyName: "",
+    email: "",
+    password: "",
+  });
+
+  const handleChange = (e) => {
+    setForm({ ...form, [e.target.name]: e.target.value });
+  };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-
-    dispatch(
-      addClient({
-        userDto: {
-          email: e.target.email.value,
-          password: e.target.password.value,
-          roles: ["ROLE_CLIENT"],
-        },
-        clientReq: {
-          companyName: e.target.companyName.value,
-        },
-      })
-    );
+    // submit logic
   };
 
   return (
-    <form onSubmit={handleSubmit} className="bg-white p-5 rounded shadow">
-      <h3 className="font-semibold mb-4">Add Client</h3>
-      <input name="companyName" className="input" placeholder="Company Name" />
-      <input name="email" className="input" placeholder="Email" />
-      <input name="password" className="input" placeholder="Password" />
-      <button className="btn-primary mt-4">Create Client</button>
+    <form onSubmit={handleSubmit} className="space-y-8">
+      {/* FORM GRID */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Company Name */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Company Name
+          </label>
+          <input
+            type="text"
+            name="companyName"
+            value={form.companyName}
+            onChange={handleChange}
+            className="w-full border border-gray-300 rounded px-3 py-2 text-sm
+                       focus:outline-none focus:ring-2 focus:ring-pink-500"
+          />
+        </div>
+
+        {/* Email */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Email
+          </label>
+          <input
+            type="email"
+            name="email"
+            value={form.email}
+            onChange={handleChange}
+            className="w-full border border-gray-300 rounded px-3 py-2 text-sm
+                       focus:outline-none focus:ring-2 focus:ring-pink-500"
+          />
+        </div>
+
+        {/* Password */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Password
+          </label>
+          <input
+            type="password"
+            name="password"
+            value={form.password}
+            onChange={handleChange}
+            className="w-full border border-gray-300 rounded px-3 py-2 text-sm
+                       focus:outline-none focus:ring-2 focus:ring-pink-500"
+          />
+        </div>
+      </div>
+
+      {/* ACTION BAR */}
+      <div className="flex justify-end pt-6 border-t border-gray-200">
+        <button
+          type="submit"
+          className="px-6 py-2 bg-pink-600 text-white text-sm font-medium
+                     rounded hover:bg-pink-700 transition"
+        >
+          Create Client
+        </button>
+      </div>
     </form>
   );
 }

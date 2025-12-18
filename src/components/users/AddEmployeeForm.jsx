@@ -1,10 +1,9 @@
-// src/components/users/AddEmployeeForm.jsx
 import { useDispatch, useSelector } from "react-redux";
-import { useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { addEmployee, clearStatus } from "../../store/userManagementSlice";
+import { useState, useRef } from "react";
+import { addEmployee } from "../../store/userManagementSlice";
+import SuccessModal from "../common/SuccessModal";
 
-/* ================= ROLE MAPPING ================= */
+/* ROLE MAPPING */
 const getRolesByDesignation = (role) => {
   switch (role.toUpperCase()) {
     case "MANAGER":
@@ -16,148 +15,227 @@ const getRolesByDesignation = (role) => {
   }
 };
 
+/* INPUT RESTRICTIONS */
+const onlyLetters = (e) =>
+  (e.target.value = e.target.value.replace(/[^a-zA-Z\s]/g, ""));
+const onlyNumbers = (e) =>
+  (e.target.value = e.target.value.replace(/[^0-9]/g, ""));
+
 export default function AddEmployeeForm({ role }) {
   const dispatch = useDispatch();
-  const navigate = useNavigate();
+  const { loading } = useSelector((s) => s.userManagement);
 
-  const { loading, success } = useSelector((s) => s.userManagement);
+  const [showSuccess, setShowSuccess] = useState(false);
 
-  const handleSubmit = (e) => {
+  const formRef = useRef(null);
+  const emailRef = useRef(null); // ✅ for auto-focus
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
-    dispatch(
-      addEmployee({
-        userDto: {
-          email: e.target.email.value,
-          password: e.target.password.value,
-          roles: getRolesByDesignation(role), // ✅ ROLE LOGIC
-        },
-        empReq: {
-          firstName: e.target.firstName.value,
-          lastName: e.target.lastName.value,
-          mobile: e.target.mobile.value,
-          cardNumber: e.target.cardNumber.value,
-          designation: role,
-          department: e.target.department.value,
-          gender: e.target.gender.value,
-          joiningDate: e.target.joiningDate.value, // yyyy-MM-dd
-          salary: Number(e.target.salary.value),
-          daysPresent: Number(e.target.daysPresent.value),
-          paidLeaves: Number(e.target.paidLeaves.value),
-        },
-      })
-    );
+    const payload = {
+      userDto: {
+        email: e.target.email.value,
+        password: e.target.password.value,
+        roles: getRolesByDesignation(role),
+      },
+      empReq: {
+        firstName: e.target.firstName.value,
+        lastName: e.target.lastName.value,
+        mobile: e.target.mobile.value,
+        cardNumber: e.target.cardNumber.value,
+        designation: role,
+        department: e.target.department.value,
+        gender: e.target.gender.value,
+        joiningDate: e.target.joiningDate.value,
+        salary: Number(e.target.salary.value),
+        daysPresent: Number(e.target.daysPresent.value),
+        paidLeaves: Number(e.target.paidLeaves.value),
+      },
+    };
+
+    try {
+      await dispatch(addEmployee(payload)).unwrap();
+      setShowSuccess(true);
+    } catch (err) {
+      alert("Failed to add employee");
+    }
   };
 
-  /* ================= CLOSE DRAWER AFTER SUCCESS ================= */
-  useEffect(() => {
-    if (success) {
-      alert(`${role} added successfully`);
-      dispatch(clearStatus());
-      navigate("/admin/users");
-    }
-  }, [success, dispatch, navigate, role]);
+  // ✅ Keka behavior: reset + focus first field
+  const handleOk = () => {
+    setShowSuccess(false);
+    formRef.current.reset();
+    emailRef.current.focus();
+  };
 
   return (
-    <form
-      onSubmit={handleSubmit}
-      className="bg-white p-5 rounded shadow space-y-4"
-    >
-      <h3 className="text-lg font-semibold">Add {role}</h3>
+    <>
+      {/* ✅ WIDTH CONTROL (VERY IMPORTANT) */}
+      <div className="max-w-[980px]">
+        <form
+          ref={formRef}
+          onSubmit={handleSubmit}
+          autoComplete="off"
+          className="space-y-10"
+        >
+          {/* ================= ACCOUNT DETAILS ================= */}
+          <Section title="Account Details">
+            <div className="grid grid-cols-2 gap-6">
+              <Input label="Email *">
+                <input
+                  ref={emailRef}
+                  name="email"
+                  type="email"
+                  required
+                  autoComplete="off"
+                  className="input-base"
+                />
+              </Input>
 
-      {/* ================= USER DETAILS ================= */}
-      <div>
-        <label className="form-label">Email</label>
-        <input name="email" type="email" className="input" required />
+              <Input label="Password *">
+                <input
+                  name="password"
+                  type="password"
+                  required
+                  minLength={8}
+                  autoComplete="new-password"
+                  className="input-base"
+                />
+              </Input>
+            </div>
+          </Section>
+
+          {/* ================= PERSONAL DETAILS ================= */}
+          <Section title="Personal Information">
+            <div className="grid grid-cols-2 gap-6">
+              <Input label="First Name">
+                <input
+                  name="firstName"
+                  onInput={onlyLetters}
+                  className="input-base"
+                />
+              </Input>
+
+              <Input label="Last Name">
+                <input
+                  name="lastName"
+                  onInput={onlyLetters}
+                  className="input-base"
+                />
+              </Input>
+            </div>
+
+            <div className="grid grid-cols-2 gap-6 mt-6">
+              <Input label="Mobile">
+                <input
+                  name="mobile"
+                  onInput={onlyNumbers}
+                  maxLength={10}
+                  className="input-base"
+                />
+              </Input>
+
+              <Input label="Card Number">
+                <input name="cardNumber" className="input-base" />
+              </Input>
+            </div>
+          </Section>
+
+          {/* ================= WORK DETAILS ================= */}
+          <Section title="Work Information">
+            <div className="grid grid-cols-3 gap-6">
+              <Input label="Department">
+                <input name="department" className="input-base" />
+              </Input>
+
+              <Input label="Gender">
+                <select name="gender" className="input-base">
+                  <option value="">Select</option>
+                  <option value="MALE">Male</option>
+                  <option value="FEMALE">Female</option>
+                  <option value="OTHER">Other</option>
+                </select>
+              </Input>
+
+              <Input label="Joining Date">
+                <input name="joiningDate" type="date" className="input-base" />
+              </Input>
+            </div>
+          </Section>
+
+          {/* ================= PAYROLL ================= */}
+          <Section title="Payroll Information">
+            <div className="grid grid-cols-3 gap-6">
+              <Input label="Salary">
+                <input name="salary" type="number" className="input-base" />
+              </Input>
+
+              <Input label="Days Present">
+                <input
+                  name="daysPresent"
+                  type="number"
+                  defaultValue={0}
+                  className="input-base"
+                />
+              </Input>
+
+              <Input label="Paid Leaves">
+                <input
+                  name="paidLeaves"
+                  type="number"
+                  defaultValue={0}
+                  className="input-base"
+                />
+              </Input>
+            </div>
+          </Section>
+
+          {/* ================= ACTION ================= */}
+          <div className="flex justify-end pt-6 border-t border-gray-200">
+            <button
+              disabled={loading}
+              className="px-8 py-2.5 bg-pink-600 text-white text-sm font-medium
+                         rounded hover:bg-pink-700 disabled:opacity-60"
+            >
+              {loading ? "Creating..." : `Create ${role}`}
+            </button>
+          </div>
+        </form>
       </div>
 
-      <div>
-        <label className="form-label">Password</label>
-        <input name="password" type="password" className="input" required />
-      </div>
+      {/* SUCCESS POPUP */}
+      <SuccessModal
+        open={showSuccess}
+        message={`${role} added successfully`}
+        onOk={handleOk}
+      />
+    </>
+  );
+}
 
-      {/* ================= EMPLOYEE DETAILS ================= */}
-      <div className="grid grid-cols-2 gap-4">
-        <div>
-          <label className="form-label">First Name</label>
-          <input name="firstName" className="input" />
-        </div>
+/* ================= SMALL REUSABLE PARTS ================= */
 
-        <div>
-          <label className="form-label">Last Name</label>
-          <input name="lastName" className="input" />
-        </div>
-      </div>
+function Section({ title, children }) {
+  return (
+    <div>
+      <h4 className="text-[13px] font-semibold text-gray-800 tracking-wide uppercase">
 
-      <div className="grid grid-cols-2 gap-4">
-        <div>
-          <label className="form-label">Mobile</label>
-          <input name="mobile" className="input" />
-        </div>
+        {title}
+      </h4>
+      <div className="border-b border-gray-200 mt-2 mb-6" />
+      {children}
+    </div>
+  );
+}
 
-        <div>
-          <label className="form-label">Card Number</label>
-          <input name="cardNumber" className="input" />
-        </div>
-      </div>
-
-      <div>
-        <label className="form-label">Department</label>
-        <input
-          name="department"
-          className="input"
-          placeholder="IT, HR, Finance..."
-        />
-      </div>
-
-      <div>
-        <label className="form-label">Gender</label>
-        <select name="gender" className="input">
-          <option value="">Select Gender</option>
-          <option value="MALE">Male</option>
-          <option value="FEMALE">Female</option>
-          <option value="OTHER">Other</option>
-        </select>
-      </div>
-
-      <div>
-        <label className="form-label">Joining Date</label>
-        <input name="joiningDate" type="date" className="input" />
-      </div>
-
-      <div className="grid grid-cols-3 gap-4">
-        <div>
-          <label className="form-label">Salary</label>
-          <input name="salary" type="number" className="input" />
-        </div>
-
-        <div>
-          <label className="form-label">Days Present</label>
-          <input
-            name="daysPresent"
-            type="number"
-            className="input"
-            defaultValue={0}
-          />
-        </div>
-
-        <div>
-          <label className="form-label">Paid Leaves</label>
-          <input
-            name="paidLeaves"
-            type="number"
-            className="input"
-            defaultValue={0}
-          />
-        </div>
-      </div>
-
-      <button
-        disabled={loading}
-        className="btn-primary w-full mt-4 disabled:opacity-60"
-      >
-        {loading ? "Creating..." : `Create ${role}`}
-      </button>
-    </form>
+function Input({ label, children }) {
+  return (
+    <div>
+      <label className="block text-sm font-medium text-gray-700 mb-1">
+        {label}
+      </label>
+      {children}
+    </div>
   );
 }

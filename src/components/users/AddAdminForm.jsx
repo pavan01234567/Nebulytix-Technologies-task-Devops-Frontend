@@ -1,33 +1,82 @@
-// src/components/users/AddAdminForm.jsx
 import { useDispatch } from "react-redux";
+import { useRef, useState } from "react";
 import { addAdmin } from "../../store/userManagementSlice";
+import SuccessModal from "../common/SuccessModal";
 
 export default function AddAdminForm() {
   const dispatch = useDispatch();
 
-  const handleSubmit = (e) => {
+  const [showSuccess, setShowSuccess] = useState(false);
+  const formRef = useRef(null);
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
-    dispatch(
-      addAdmin({
-        email: e.target.email.value,
-        password: e.target.password.value,
-        roles: ["ROLE_ADMIN"],
-      })
-    );
+    const payload = {
+      email: e.target.email.value,
+      password: e.target.password.value,
+      roles: ["ROLE_ADMIN"],
+    };
+
+    try {
+      await dispatch(addAdmin(payload)).unwrap();
+      setShowSuccess(true); // ✅ show success popup
+    } catch (err) {
+      alert("Failed to add admin");
+    }
+  };
+
+  const handleOk = () => {
+    setShowSuccess(false);     // close popup
+    formRef.current.reset();  // clear form
   };
 
   return (
-    <form onSubmit={handleSubmit} className="bg-white p-5 rounded shadow">
-      <h3 className="font-semibold mb-4">Add Admin</h3>
-      <input name="email" className="input" placeholder="Email" required />
-      <input
-        name="password"
-        className="input"
-        placeholder="Password"
-        required
+    <>
+      <form
+        ref={formRef}
+        onSubmit={handleSubmit}
+        autoComplete="off"
+        className="space-y-6"
+      >
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Email
+          </label>
+          <input
+            name="email"
+            type="email"
+            required
+            className="input-base"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Password
+          </label>
+          <input
+            name="password"
+            type="password"
+            required
+            minLength={8}
+            className="input-base"
+          />
+        </div>
+
+        <div className="flex justify-end pt-4">
+          <button className="px-6 py-2 bg-pink-600 text-white rounded">
+            Create Admin
+          </button>
+        </div>
+      </form>
+
+      {/* SUCCESS POPUP */}
+      <SuccessModal
+        open={showSuccess}
+        message="Admin added successfully"
+        onOk={handleOk}
       />
-      <button className="btn-primary mt-4">Create Admin</button>
-    </form>
+    </>
   );
 }

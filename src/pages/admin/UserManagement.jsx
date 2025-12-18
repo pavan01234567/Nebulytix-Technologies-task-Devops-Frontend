@@ -1,36 +1,23 @@
-//src/pages/admin/UserManagement.jsx
-import { Outlet, useNavigate } from "react-router-dom";
+import { Outlet } from "react-router-dom";
+import UserManagementTabs from "../../components/admin/UserManagementTabs";
 
 export default function UserManagement() {
-  const navigate = useNavigate();
-
   return (
-    <div className="space-y-6">
-      <h1 className="text-2xl font-semibold">User Management</h1>
+    <>
+      {/* MODULE NAV (flush under Topbar) */}
+      <UserManagementTabs />
 
-      {/* Buttons */}
-      <div className="flex flex-wrap gap-3">
-        <button onClick={() => navigate("add-admin")} className="btn">
-          Add Admin
-        </button>
-        <button onClick={() => navigate("add-manager")} className="btn">
-          Add Manager
-        </button>
-        <button onClick={() => navigate("add-hr")} className="btn">
-          Add HR
-        </button>
-        <button onClick={() => navigate("add-employee")} className="btn">
-          Add Employee
-        </button>
-        <button onClick={() => navigate("add-client")} className="btn">
-          Add Client
-        </button>
+      {/* PAGE AREA */}
+      <div className="bg-[#f4f6f8] min-h-screen">
+        <div className="max-w-6xl mx-auto px-6 py-6">
+          {/* CONTENT CONTAINER */}
+          <div className="bg-white border border-gray-200 rounded-sm">
+            <div className="p-8">
+              <Outlet />
+            </div>
+          </div>
+        </div>
       </div>
-
-      {/* NORMAL PAGE CONTENT */}
-      <div className="bg-gray-50 dark:bg-gray-800 p-6 rounded-lg shadow">
-        <Outlet />
-      </div>
-    </div>
+    </>
   );
 }
