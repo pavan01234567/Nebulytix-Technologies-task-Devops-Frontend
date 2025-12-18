@@ -1,19 +1,15 @@
-import { useNavigate, useLocation, Outlet } from "react-router-dom";
-import RightDrawer from "../../components/common/RightDrawer";
+
+import { Outlet, useNavigate } from "react-router-dom";
 
 export default function UserManagement() {
   const navigate = useNavigate();
-  const location = useLocation();
-
-  // Drawer opens when route includes /add-
-  const drawerOpen = location.pathname.includes("/add-");
 
   return (
-    <div>
-      <h1 className="text-2xl font-semibold mb-4">User Management</h1>
+    <div className="space-y-6">
+      <h1 className="text-2xl font-semibold">User Management</h1>
 
       {/* Buttons */}
-      <div className="flex gap-3 mb-6">
+      <div className="flex flex-wrap gap-3">
         <button onClick={() => navigate("add-admin")} className="btn">
           Add Admin
         </button>
@@ -31,10 +27,10 @@ export default function UserManagement() {
         </button>
       </div>
 
-      {/* Drawer */}
-      <RightDrawer open={drawerOpen} onClose={() => navigate("/admin/users")}>
+      {/* NORMAL PAGE CONTENT */}
+      <div className="bg-gray-50 dark:bg-gray-800 p-6 rounded-lg shadow">
         <Outlet />
-      </RightDrawer>
+      </div>
     </div>
   );
 }

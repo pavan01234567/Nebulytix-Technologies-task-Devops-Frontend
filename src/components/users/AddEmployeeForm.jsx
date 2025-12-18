@@ -1,3 +1,4 @@
+// src/components/users/AddEmployeeForm.jsx
 import { useDispatch, useSelector } from "react-redux";
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
@@ -67,22 +68,12 @@ export default function AddEmployeeForm({ role }) {
       {/* ================= USER DETAILS ================= */}
       <div>
         <label className="form-label">Email</label>
-        <input
-          name="email"
-          type="email"
-          className="input"
-          required
-        />
+        <input name="email" type="email" className="input" required />
       </div>
 
       <div>
         <label className="form-label">Password</label>
-        <input
-          name="password"
-          type="password"
-          className="input"
-          required
-        />
+        <input name="password" type="password" className="input" required />
       </div>
 
       {/* ================= EMPLOYEE DETAILS ================= */}
@@ -131,21 +122,13 @@ export default function AddEmployeeForm({ role }) {
 
       <div>
         <label className="form-label">Joining Date</label>
-        <input
-          name="joiningDate"
-          type="date"
-          className="input"
-        />
+        <input name="joiningDate" type="date" className="input" />
       </div>
 
       <div className="grid grid-cols-3 gap-4">
         <div>
           <label className="form-label">Salary</label>
-          <input
-            name="salary"
-            type="number"
-            className="input"
-          />
+          <input name="salary" type="number" className="input" />
         </div>
 
         <div>
