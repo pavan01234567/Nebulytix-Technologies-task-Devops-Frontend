@@ -58,11 +58,11 @@ export default function AdminSidebar() {
           open={openMenu === "users"}
           onToggle={() => setOpenMenu(openMenu === "users" ? null : "users")}
           items={[
-            { label: "Admins", path: "/admin/user-lists/admins" },
-            { label: "Managers", path: "/admin/user-lists/managers" },
-            { label: "HRs", path: "/admin/user-lists/hrs" },
-            { label: "Employees", path: "/admin/user-lists/employees" },
-            { label: "Clients", path: "/admin/user-lists/clients" },
+            { label: "Admins", path: "/admin/user-lists?type=admins" },
+            { label: "Managers", path: "/admin/user-lists?type=managers" },
+            { label: "HRs", path: "/admin/user-lists?type=hrs" },
+            { label: "Employees", path: "/admin/user-lists?type=employees" },
+            { label: "Clients", path: "/admin/user-lists?type=clients" },
           ]}
           onSelect={(path) => {
             navigate(path);

@@ -19,7 +19,7 @@ import AddClientForm from "./components/users/AddClientForm";
 import AddEmployeeForm from "./components/users/AddEmployeeForm";
 
 // Users list
-import UsersList from "./components/users/UsersList";
+import UserLists from "./pages/admin/UserLists";
 
 // HR
 import HrLayout from "./layout/hr/HrLayout";
@@ -61,6 +61,7 @@ export default function App() {
         }
       >
         <Route index element={<AdminDashboard />} />
+        <Route path="user-lists" element={<UserLists />} />
 
         {/* USER MANAGEMENT */}
         <Route path="users" element={<UserManagement />}>
@@ -78,11 +79,6 @@ export default function App() {
           <Route path="add-client" element={<AddClientForm />} />
 
           {/* USERS LIST */}
-          <Route path="list-admin" element={<UsersList role="ADMIN" />} />
-          <Route path="list-manager" element={<UsersList role="MANAGER" />} />
-          <Route path="list-hr" element={<UsersList role="HR" />} />
-          <Route path="list-employee" element={<UsersList role="EMPLOYEE" />} />
-          <Route path="list-client" element={<UsersList role="CLIENT" />} />
         </Route>
       </Route>
 
