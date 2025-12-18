@@ -1,11 +1,9 @@
-//src/layout/Sidebar.jsx
+// src/layout/AdminSidebar.jsx
 import { NavLink, useNavigate } from "react-router-dom";
-import { useSelector } from "react-redux";
 import { LayoutDashboard, UserPlus, Users, FileText } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
-export default function Sidebar() {
-  const { userDashboard } = useSelector((s) => s.auth);
+export default function AdminSidebar() {
   const navigate = useNavigate();
 
   const [openMenu, setOpenMenu] = useState(null);
@@ -22,8 +20,6 @@ export default function Sidebar() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  if (userDashboard !== "ADMIN_DASHBOARD") return null;
-
   return (
     <aside
       ref={sidebarRef}
@@ -33,7 +29,7 @@ export default function Sidebar() {
       <div className="h-16 flex items-center justify-center font-bold">NXT</div>
 
       <nav className="flex-1 mt-6 flex flex-col items-center gap-3">
-        {/* Dashboard */}
+        {/* ADMIN HOME */}
         <NavLink to="/admin" className="sidebar-icon">
           <LayoutDashboard size={20} />
         </NavLink>
@@ -56,17 +52,17 @@ export default function Sidebar() {
           }}
         />
 
-        {/* USERS LIST */}
+        {/* USERS LIST (UPDATED ROUTES ✅) */}
         <SidebarFlyout
           icon={<Users size={20} />}
           open={openMenu === "users"}
           onToggle={() => setOpenMenu(openMenu === "users" ? null : "users")}
           items={[
-            { label: "Admins", path: "/admin/users/list-admin" },
-            { label: "Managers", path: "/admin/users/list-manager" },
-            { label: "HRs", path: "/admin/users/list-hr" },
-            { label: "Employees", path: "/admin/users/list-employee" },
-            { label: "Clients", path: "/admin/users/list-client" },
+            { label: "Admins", path: "/admin/user-lists/admins" },
+            { label: "Managers", path: "/admin/user-lists/managers" },
+            { label: "HRs", path: "/admin/user-lists/hrs" },
+            { label: "Employees", path: "/admin/user-lists/employees" },
+            { label: "Clients", path: "/admin/user-lists/clients" },
           ]}
           onSelect={(path) => {
             navigate(path);
@@ -74,7 +70,7 @@ export default function Sidebar() {
           }}
         />
 
-        {/* Reports */}
+        {/* REPORTS */}
         <NavLink to="/admin/view-report" className="sidebar-icon">
           <FileText size={20} />
         </NavLink>

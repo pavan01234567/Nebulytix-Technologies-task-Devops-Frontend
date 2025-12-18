@@ -9,7 +9,7 @@ import Contacts from "./pages/contacts";
 import About from "./pages/About";
 
 // Admin
-import AdminLayout from "./pages/admin/AdminLayout";
+import AdminLayout from "./layout/admin/AdminLayout";
 import AdminDashboard from "./pages/AdminDashboard";
 import UserManagement from "./pages/admin/UserManagement";
 
@@ -22,19 +22,19 @@ import AddEmployeeForm from "./components/users/AddEmployeeForm";
 import UsersList from "./components/users/UsersList";
 
 // HR
-import HrLayout from "./pages/hr/HrLayout";
+import HrLayout from "./layout/hr/HrLayout";
 import HrDashboard from "./pages/HrDashboard";
 
 // Manager
-import ManagerLayout from "./pages/manager/ManagerLayout";
+import ManagerLayout from "./layout/manager/ManagerLayout";
 import ManagerDashboard from "./pages/ManagerDashboard";
 
 // Employee
-import EmployeeLayout from "./pages/employee/EmployeeLayout";
+import EmployeeLayout from "./layout/employee/EmployeeLayout";
 import EmployeeDashboard from "./pages/EmployeeDashboard";
 
 // Client
-import ClientLayout from "./pages/client/ClientLayout";
+import ClientLayout from "./layout/client/ClientLayout";
 import ClientDashboard from "./pages/ClientDashboard";
 
 // Protected

@@ -1,7 +1,7 @@
+//src/pages/AdminDashboard.jsx
 import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchAdminProfile } from "../store/adminSlice";
-import DashboardLayout from "../layout/DashboardLayout";
 
 export default function AdminDashboard() {
   const dispatch = useDispatch();
