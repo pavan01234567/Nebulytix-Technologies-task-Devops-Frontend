@@ -1,44 +1,47 @@
-// src/layout/AdminSidebar.jsx
-import { NavLink, useNavigate } from "react-router-dom";
+import { NavLink, useNavigate, useLocation } from "react-router-dom";
 import { LayoutDashboard, UserPlus, Users, FileText } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 
 export default function AdminSidebar() {
   const navigate = useNavigate();
-
+  const location = useLocation();
   const [openMenu, setOpenMenu] = useState(null);
-  const sidebarRef = useRef(null);
+  const hoverTimer = useRef(null);
 
-  // Close flyout on outside click
-  useEffect(() => {
-    function handleClickOutside(e) {
-      if (sidebarRef.current && !sidebarRef.current.contains(e.target)) {
-        setOpenMenu(null);
-      }
-    }
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
+  const openWithDelay = (menu) => {
+    hoverTimer.current = setTimeout(() => {
+      setOpenMenu(menu);
+    }, 80);
+  };
+
+  const closeMenu = () => {
+    clearTimeout(hoverTimer.current);
+    setOpenMenu(null);
+  };
 
   return (
-    <aside
-      ref={sidebarRef}
-      className="fixed left-0 top-0 w-20 h-screen bg-[#0D243C] text-white flex flex-col items-center z-30"
-    >
-      {/* Logo */}
-      <div className="h-16 flex items-center justify-center font-bold">NXT</div>
+    <aside className="fixed left-0 top-0 w-20 h-screen bg-[#071a2d] z-30 flex flex-col items-center">
+      {/* LOGO */}
+      <div className="h-16 flex items-center justify-center text-white font-semibold">
+        NXT
+      </div>
 
-      <nav className="flex-1 mt-6 flex flex-col items-center gap-3">
-        {/* ADMIN HOME */}
-        <NavLink to="/admin" className="sidebar-icon">
-          <LayoutDashboard size={20} />
-        </NavLink>
+      <nav className="flex flex-col w-full">
+        <IconItem
+          to="/admin"
+          label="Home"
+          icon={<LayoutDashboard size={20} />}
+        />
 
-        {/* ADD USER */}
-        <SidebarFlyout
+        {/* ADD USERS */}
+        <HoverFlyout
+          label="Add"
           icon={<UserPlus size={20} />}
+          defaultPath="/admin/users/add-admin" // ✅ NEW
           open={openMenu === "add"}
-          onToggle={() => setOpenMenu(openMenu === "add" ? null : "add")}
+          onEnter={() => openWithDelay("add")}
+          onLeave={closeMenu}
+          location={location}
           items={[
             { label: "Add Admin", path: "/admin/users/add-admin" },
             { label: "Add Manager", path: "/admin/users/add-manager" },
@@ -48,15 +51,19 @@ export default function AdminSidebar() {
           ]}
           onSelect={(path) => {
             navigate(path);
-            setOpenMenu(null);
+            closeMenu();
           }}
         />
 
-        {/* USERS LIST (UPDATED ROUTES ✅) */}
-        <SidebarFlyout
+        {/* USERS LIST */}
+        <HoverFlyout
+          label="Users"
           icon={<Users size={20} />}
+          defaultPath="/admin/user-lists?type=employees" // ✅ NEW
           open={openMenu === "users"}
-          onToggle={() => setOpenMenu(openMenu === "users" ? null : "users")}
+          onEnter={() => openWithDelay("users")}
+          onLeave={closeMenu}
+          location={location}
           items={[
             { label: "Admins", path: "/admin/user-lists?type=admins" },
             { label: "Managers", path: "/admin/user-lists?type=managers" },
@@ -66,41 +73,120 @@ export default function AdminSidebar() {
           ]}
           onSelect={(path) => {
             navigate(path);
-            setOpenMenu(null);
+            closeMenu();
           }}
         />
 
-        {/* REPORTS */}
-        <NavLink to="/admin/view-report" className="sidebar-icon">
-          <FileText size={20} />
-        </NavLink>
+        <IconItem
+          to="/admin/view-report"
+          label="Reports"
+          icon={<FileText size={20} />}
+        />
       </nav>
     </aside>
   );
 }
 
-/* ================= FLYOUT ================= */
+/* ================= ICON ITEM ================= */
 
-function SidebarFlyout({ icon, items, open, onToggle, onSelect }) {
+function IconItem({ to, icon, label }) {
   return (
-    <div className="relative">
-      <button onClick={onToggle} className="sidebar-icon">
+    <NavLink
+      to={to}
+      end
+      className={({ isActive }) =>
+        `
+        relative h-14 w-full flex flex-col items-center justify-center gap-1
+        text-[11px] font-medium leading-tight
+        transition-colors duration-150
+        ${
+          isActive
+            ? "bg-[#0b2239] text-[#e5f0ff]"
+            : "text-[#8fa3bf] hover:text-[#c7d5ea]"
+        }
+        focus:outline-none focus:bg-[#0f2f4d] focus:text-white
+        `
+      }
+    >
+      {icon}
+      <span>{label}</span>
+      <span className="absolute left-0 top-0 h-full w-[3px] bg-pink-500" />
+    </NavLink>
+  );
+}
+
+/* ================= HOVER FLYOUT ================= */
+
+function HoverFlyout({
+  icon,
+  label,
+  items,
+  open,
+  onEnter,
+  onLeave,
+  onSelect,
+  location,
+  defaultPath, // ✅ NEW
+}) {
+  return (
+    <div
+      className="relative w-full"
+      onMouseEnter={onEnter}
+      onMouseLeave={onLeave}
+    >
+      {/* ICON (NOW CLICKABLE) */}
+      <button
+        onClick={() => onSelect(defaultPath)} // ✅ NEW
+        className="
+          h-14 w-full flex flex-col items-center justify-center gap-1
+          text-[11px] font-medium leading-tight
+          text-[#8fa3bf] hover:text-[#c7d5ea]
+          transition-colors duration-150
+          focus:outline-none
+        "
+      >
         {icon}
+        <span>{label}</span>
       </button>
 
-      {open && (
-        <div className="absolute left-14 top-0 w-48 bg-white text-gray-800 rounded-lg shadow-lg z-50">
-          {items.map((i) => (
+      {/* FLYOUT */}
+      <div
+        className={`
+          absolute left-20 top-0 w-56
+          bg-[#0b2239] border-l border-white/10
+          transition-all duration-150 ease-out
+          ${
+            open
+              ? "opacity-100 translate-x-0 pointer-events-auto"
+              : "opacity-0 translate-x-1 pointer-events-none"
+          }
+        `}
+      >
+        {items.map((i) => {
+          const isActive = location.pathname === i.path;
+
+          return (
             <button
               key={i.path}
               onClick={() => onSelect(i.path)}
-              className="w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
+              className={`
+                w-full px-4 py-2 text-left
+                text-[12.5px] font-medium leading-[1.3]
+                transition-colors duration-100
+                ${
+                  isActive
+                    ? "bg-[#133b5c] text-white"
+                    : "text-[#9fb3cc] hover:bg-[#0f2f4d] hover:text-white"
+                }
+                focus:outline-none focus:bg-[#0f2f4d] focus:text-white
+              `}
             >
               {i.label}
             </button>
-          ))}
-        </div>
-      )}
+          );
+        })}
+      </div>
     </div>
+    
   );
 }
