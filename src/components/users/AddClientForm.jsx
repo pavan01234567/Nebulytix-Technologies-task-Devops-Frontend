@@ -1,209 +1,227 @@
+// src/components/users/AddClientForm.jsx
 import { useDispatch, useSelector } from "react-redux";
-import { useEffect, useState } from "react";
+import { useState, useRef } from "react";
 import { addClient, clearStatus } from "../../store/userManagementSlice";
+import SuccessModal from "../common/SuccessModal";
 import { useNavigate } from "react-router-dom";
+
+/* ================= INPUT RESTRICTIONS ================= */
+const onlyNumbers = (e) => {
+  e.target.value = e.target.value.replace(/[^0-9]/g, "");
+};
 
 export default function AddClientForm() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  const { loading, success, error } = useSelector((s) => s.userManagement);
+  const { loading } = useSelector((s) => s.userManagement);
 
-  const [form, setForm] = useState({
-    // USER
-    email: "",
-    password: "",
+  const [showSuccess, setShowSuccess] = useState(false);
+  const formRef = useRef(null);
+  const emailRef = useRef(null);
 
-    // CLIENT
-    companyName: "",
-    contactPerson: "",
-    contactEmail: "",
-    phone: "",
-    alternatePhone: "",
-    address: "",
-    website: "",
-    industryType: "",
-    gstNumber: "",
-  });
-
-  const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
-  };
-
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
-    dispatch(
-      addClient({
-        userDto: {
-          email: form.email,
-          password: form.password,
-          roles: ["ROLE_CLIENT"], // 🔐 always backend-safe
-        },
-        clientReq: {
-          companyName: form.companyName,
-          contactPerson: form.contactPerson,
-          contactEmail: form.contactEmail,
-          phone: form.phone,
-          alternatePhone: form.alternatePhone,
-          address: form.address,
-          website: form.website,
-          industryType: form.industryType,
-          gstNumber: form.gstNumber,
-        },
-      })
-    );
+    const payload = {
+      userDto: {
+        email: e.target.email.value,
+        password: e.target.password.value,
+        roles: ["ROLE_CLIENT"],
+      },
+      clientReq: {
+        companyName: e.target.companyName.value,
+        contactPerson: e.target.contactPerson.value,
+        contactEmail: e.target.contactEmail.value,
+        phone: e.target.phone.value,
+        alternatePhone: e.target.alternatePhone.value,
+        industryType: e.target.industryType.value,
+        website: e.target.website.value,
+        gstNumber: e.target.gstNumber.value,
+        address: e.target.address.value,
+      },
+    };
+
+    try {
+      await dispatch(addClient(payload)).unwrap();
+      setShowSuccess(true);
+    } catch {
+      alert("Failed to add client");
+    }
   };
 
-  /* ================= SUCCESS HANDLER ================= */
-  useEffect(() => {
-    if (success) {
-      alert("Client created successfully");
-      dispatch(clearStatus());
-      navigate("/admin/user-lists?type=clients");
-    }
-  }, [success, dispatch, navigate]);
+  const handleOk = () => {
+    setShowSuccess(false);
+    dispatch(clearStatus());
+    formRef.current.reset();
+    emailRef.current.focus();
+    navigate("/admin/user-lists?type=clients");
+  };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-8">
-      <h2 className="text-xl font-semibold">Add Client</h2>
-
-      {/* ================= USER DETAILS ================= */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div>
-          <label className="form-label">Email</label>
-          <input
-            type="email"
-            name="email"
-            value={form.email}
-            onChange={handleChange}
-            required
-            className="input"
-          />
-        </div>
-
-        <div>
-          <label className="form-label">Password</label>
-          <input
-            type="password"
-            name="password"
-            value={form.password}
-            onChange={handleChange}
-            required
-            className="input"
-          />
-        </div>
-      </div>
-
-      {/* ================= CLIENT DETAILS ================= */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div>
-          <label className="form-label">Company Name</label>
-          <input
-            name="companyName"
-            value={form.companyName}
-            onChange={handleChange}
-            required
-            className="input"
-          />
-        </div>
-
-        <div>
-          <label className="form-label">Contact Person</label>
-          <input
-            name="contactPerson"
-            value={form.contactPerson}
-            onChange={handleChange}
-            className="input"
-          />
-        </div>
-
-        <div>
-          <label className="form-label">Contact Email</label>
-          <input
-            type="email"
-            name="contactEmail"
-            value={form.contactEmail}
-            onChange={handleChange}
-            className="input"
-          />
-        </div>
-
-        <div>
-          <label className="form-label">Phone</label>
-          <input
-            name="phone"
-            value={form.phone}
-            onChange={handleChange}
-            className="input"
-          />
-        </div>
-
-        <div>
-          <label className="form-label">Alternate Phone</label>
-          <input
-            name="alternatePhone"
-            value={form.alternatePhone}
-            onChange={handleChange}
-            className="input"
-          />
-        </div>
-
-        <div>
-          <label className="form-label">Industry Type</label>
-          <input
-            name="industryType"
-            value={form.industryType}
-            onChange={handleChange}
-            className="input"
-            placeholder="IT, Finance, Construction..."
-          />
-        </div>
-
-        <div>
-          <label className="form-label">Website</label>
-          <input
-            name="website"
-            value={form.website}
-            onChange={handleChange}
-            className="input"
-          />
-        </div>
-
-        <div>
-          <label className="form-label">GST Number</label>
-          <input
-            name="gstNumber"
-            value={form.gstNumber}
-            onChange={handleChange}
-            className="input"
-          />
-        </div>
-      </div>
-
-      <div>
-        <label className="form-label">Address</label>
-        <textarea
-          name="address"
-          value={form.address}
-          onChange={handleChange}
-          rows={3}
-          className="input"
-        />
-      </div>
-
-      {/* ================= ACTION BAR ================= */}
-      {error && <p className="text-red-600">{error}</p>}
-
-      <div className="flex justify-end pt-6 border-t">
-        <button
-          type="submit"
-          disabled={loading}
-          className="btn-primary disabled:opacity-60"
+    <>
+      {/* ================= CONTAINER ================= */}
+      <div className="max-w-[980px] mx-auto">
+        <form
+          ref={formRef}
+          onSubmit={handleSubmit}
+          autoComplete="off"
+          className="space-y-10"
         >
-          {loading ? "Creating..." : "Create Client"}
-        </button>
+          {/* ================= ACCOUNT DETAILS ================= */}
+          <Section title="Account Details">
+            <div className="grid grid-cols-2 gap-6">
+              <Input label="Email *">
+                <input
+                  ref={emailRef}
+                  name="email"
+                  type="email"
+                  required
+                  className="input-base"
+                />
+              </Input>
+
+              <Input label="Password *">
+                <input
+                  name="password"
+                  type="password"
+                  minLength={8}
+                  required
+                  autoComplete="new-password"
+                  className="input-base"
+                />
+              </Input>
+            </div>
+          </Section>
+
+          {/* ================= CLIENT INFORMATION ================= */}
+          <Section title="Client Information">
+            <div className="grid grid-cols-2 gap-6">
+              <Input label="Company Name *">
+                <input
+                  name="companyName"
+                  required
+                  className="input-base"
+                />
+              </Input>
+
+              <Input label="Contact Person">
+                <input
+                  name="contactPerson"
+                  className="input-base"
+                />
+              </Input>
+            </div>
+
+            <div className="grid grid-cols-2 gap-6 mt-6">
+              <Input label="Contact Email">
+                <input
+                  name="contactEmail"
+                  type="email"
+                  className="input-base"
+                />
+              </Input>
+
+              <Input label="Phone">
+                <input
+                  name="phone"
+                  onInput={onlyNumbers}
+                  maxLength={10}
+                  className="input-base"
+                />
+              </Input>
+            </div>
+
+            <div className="grid grid-cols-2 gap-6 mt-6">
+              <Input label="Alternate Phone">
+                <input
+                  name="alternatePhone"
+                  onInput={onlyNumbers}
+                  maxLength={10}
+                  className="input-base"
+                />
+              </Input>
+
+              <Input label="Industry Type">
+                <input
+                  name="industryType"
+                  placeholder="IT, Finance, Construction..."
+                  className="input-base"
+                />
+              </Input>
+            </div>
+
+            <div className="grid grid-cols-2 gap-6 mt-6">
+              <Input label="Website">
+                <input
+                  name="website"
+                  className="input-base"
+                />
+              </Input>
+
+              <Input label="GST Number">
+                <input
+                  name="gstNumber"
+                  className="input-base"
+                />
+              </Input>
+            </div>
+
+            <div className="mt-6">
+              <Input label="Address">
+                <textarea
+                  name="address"
+                  rows={3}
+                  className="input-base"
+                />
+              </Input>
+            </div>
+          </Section>
+
+          {/* ================= ACTION ================= */}
+          <div className="flex justify-end pt-6 border-t border-gray-200">
+            <button
+              disabled={loading}
+              className="px-8 py-2.5 bg-pink-600 text-white text-sm font-medium
+                         rounded hover:bg-pink-700 disabled:opacity-60"
+            >
+              {loading ? "Creating..." : "Create Client"}
+            </button>
+          </div>
+        </form>
       </div>
-    </form>
+
+      {/* ================= SUCCESS MODAL ================= */}
+      <SuccessModal
+        open={showSuccess}
+        message="Client added successfully"
+        onOk={handleOk}
+      />
+    </>
+  );
+}
+
+/* ================= REUSABLE UI ================= */
+
+function Section({ title, children }) {
+  return (
+    <div>
+      <h4 className="text-[13px] font-semibold text-gray-800 tracking-wide uppercase">
+        {title}
+      </h4>
+      <div className="border-b border-gray-200 mt-2 mb-6" />
+      {children}
+    </div>
+  );
+}
+
+function Input({ label, children }) {
+  return (
+    <div>
+      <label className="block text-sm font-medium text-gray-700 mb-1">
+        {label}
+      </label>
+      {children}
+    </div>
   );
 }

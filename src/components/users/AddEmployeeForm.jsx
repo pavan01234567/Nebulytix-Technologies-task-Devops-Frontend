@@ -1,4 +1,3 @@
-//src/components/users/AddEmployeeForm.jsx
 import { useDispatch, useSelector } from "react-redux";
 import { useState, useRef } from "react";
 import { addEmployee } from "../../store/userManagementSlice";
@@ -14,10 +13,17 @@ const onlyNumbers = (e) => {
   e.target.value = e.target.value.replace(/[^0-9]/g, "");
 };
 
+/* ================= ROLE → BACKEND ROLE MAP ================= */
+const ROLE_MAP = {
+  Employee: ["ROLE_EMPLOYEE"],
+  Manager: ["ROLE_MANAGER", "ROLE_EMPLOYEE"],
+  HR: ["ROLE_HR", "ROLE_EMPLOYEE"],
+};
+
 export default function AddEmployeeForm({ role, mode = "ADMIN" }) {
   const dispatch = useDispatch();
 
-  // ✅ SAFE SELECTOR (prevents undefined crash)
+  // ✅ SAFE SELECTOR
   const loading = useSelector((s) =>
     mode === "HR" ? s.hrEmployee?.loading : s.userManagement?.loading
   );
@@ -33,7 +39,7 @@ export default function AddEmployeeForm({ role, mode = "ADMIN" }) {
       userDto: {
         email: e.target.email.value,
         password: e.target.password.value,
-        roles: role === "Employee" ? ["ROLE_EMPLOYEE"] : [],
+        roles: ROLE_MAP[role] || ["ROLE_EMPLOYEE"],
       },
       empReq: {
         firstName: e.target.firstName.value,
@@ -69,7 +75,6 @@ export default function AddEmployeeForm({ role, mode = "ADMIN" }) {
 
   return (
     <>
-      {/* ✅ CENTERED & VISIBLE */}
       <div className="max-w-[980px] mx-auto">
         <form
           ref={formRef}
@@ -202,7 +207,7 @@ export default function AddEmployeeForm({ role, mode = "ADMIN" }) {
         </form>
       </div>
 
-      {/* SUCCESS MODAL */}
+      {/* ================= SUCCESS MODAL ================= */}
       <SuccessModal
         open={showSuccess}
         message={`${role} added successfully`}
