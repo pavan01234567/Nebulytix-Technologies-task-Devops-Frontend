@@ -1,4 +1,4 @@
-import { configureStore } from "@reduxjs/toolkit";
+import { configureStore, combineReducers } from "@reduxjs/toolkit";
 import authReducer from "./authSlice";
 import adminReducer from "./adminSlice";
 import hrReducer from "./hrSlice";
@@ -11,7 +11,7 @@ import hrEmployeeReducer from "./hrEmployeeSlice";
 import projectReducer from "./projectSlice";
 import salaryReducer from "./salarySlice";
 import bankReducer from "./bankSlice";
-
+import attendanceReducer from "./attendanceSlice";
 
 import storage from "redux-persist/lib/storage";
 import {
@@ -25,12 +25,10 @@ import {
   REGISTER,
 } from "redux-persist";
 
-import { combineReducers } from "@reduxjs/toolkit";
-
 const persistConfig = {
   key: "root",
   storage,
-  whitelist: ["auth"],
+  whitelist: ["auth"], // ✅ only auth is persisted
 };
 
 const rootReducer = combineReducers({
@@ -46,14 +44,13 @@ const rootReducer = combineReducers({
   project: projectReducer,
   salary: salaryReducer,
   bank: bankReducer,
+  attendance: attendanceReducer, // ✅ REQUIRED
 });
-
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);
 
 export const store = configureStore({
   reducer: persistedReducer,
-
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
       serializableCheck: {
@@ -63,7 +60,7 @@ export const store = configureStore({
           PAUSE,
           PERSIST,
           PURGE,
-          REGISTER, // redux-persist internal non-serializable action
+          REGISTER,
         ],
       },
     }),
