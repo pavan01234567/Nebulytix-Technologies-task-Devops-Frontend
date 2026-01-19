@@ -50,9 +50,6 @@ export default function AddEmployeeForm({ role, mode = "ADMIN" }) {
         department: e.target.department.value,
         gender: e.target.gender.value,
         joiningDate: e.target.joiningDate.value,
-        salary: Number(e.target.salary.value),
-        daysPresent: Number(e.target.daysPresent.value),
-        paidLeaves: Number(e.target.paidLeaves.value),
       },
     };
 
@@ -163,33 +160,6 @@ export default function AddEmployeeForm({ role, mode = "ADMIN" }) {
 
               <Input label="Joining Date">
                 <input name="joiningDate" type="date" className="input-base" />
-              </Input>
-            </div>
-          </Section>
-
-          {/* ================= PAYROLL ================= */}
-          <Section title="Payroll Information">
-            <div className="grid grid-cols-3 gap-6">
-              <Input label="Salary">
-                <input name="salary" type="number" className="input-base" />
-              </Input>
-
-              <Input label="Days Present">
-                <input
-                  name="daysPresent"
-                  type="number"
-                  defaultValue={0}
-                  className="input-base"
-                />
-              </Input>
-
-              <Input label="Paid Leaves">
-                <input
-                  name="paidLeaves"
-                  type="number"
-                  defaultValue={0}
-                  className="input-base"
-                />
               </Input>
             </div>
           </Section>
