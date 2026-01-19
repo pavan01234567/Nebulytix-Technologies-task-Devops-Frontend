@@ -16,13 +16,14 @@ export default function EmployeeCard({ employee }) {
 
       <div className="flex gap-3 pt-2">
         <button
-          onClick={() => navigate(`/admin/user-lists/employees/${employee.id}`)}
+          onClick={() =>
+            navigate(`/admin/user-lists/employees/${employee.id}`)
+          }
           className="text-blue-600 text-sm"
         >
           View
         </button>
 
-        <button className="text-green-600 text-sm">Update</button>
         <button className="text-red-600 text-sm">Delete</button>
       </div>
     </div>

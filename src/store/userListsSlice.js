@@ -1,4 +1,3 @@
-//src/store/userListsSlice.js
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axiosInstance from "../api/axiosInstance";
 
@@ -6,14 +5,13 @@ import axiosInstance from "../api/axiosInstance";
    ASYNC THUNKS
 ======================= */
 
-
 // ADMINS
 export const fetchAdmins = createAsyncThunk(
   "userLists/fetchAdmins",
   async (_, thunkAPI) => {
     try {
       const res = await axiosInstance.get("/admin/fetch/admin");
-      return res.data.data; // ResponseMessage<List<AdminProfileDto>>
+      return res.data.data;
     } catch (err) {
       return thunkAPI.rejectWithValue(
         err.response?.data?.message || "Failed to fetch admins"
@@ -28,7 +26,7 @@ export const fetchManagers = createAsyncThunk(
   async (_, thunkAPI) => {
     try {
       const res = await axiosInstance.get("/admin/fetch/manager");
-      return res.data.data; // List<EmployeeProfileDto>
+      return res.data.data;
     } catch (err) {
       return thunkAPI.rejectWithValue(
         err.response?.data?.message || "Failed to fetch managers"
@@ -73,10 +71,27 @@ export const fetchClients = createAsyncThunk(
   async (_, thunkAPI) => {
     try {
       const res = await axiosInstance.get("/admin/fetch/clients");
-      return res.data.data; // List<ClientProfileDto>
+      return res.data.data;
     } catch (err) {
       return thunkAPI.rejectWithValue(
         err.response?.data?.message || "Failed to fetch clients"
+      );
+    }
+  }
+);
+
+/* =======================
+   ✅ UPDATE EMPLOYEE
+======================= */
+export const updateEmployee = createAsyncThunk(
+  "userLists/updateEmployee",
+  async ({ id, data }, thunkAPI) => {
+    try {
+      const res = await axiosInstance.put(`/hr/update/${id}`, data);
+      return res.data.data; // UpdateEmployeeResponseDto
+    } catch (err) {
+      return thunkAPI.rejectWithValue(
+        err.response?.data?.message || "Failed to update employee"
       );
     }
   }
@@ -154,7 +169,7 @@ const userListsSlice = createSlice({
         state.error = action.payload;
       })
 
-      /* ========= EMPLOYEE ========= */
+      /* ========= EMPLOYEES ========= */
       .addCase(fetchEmployees.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -180,6 +195,30 @@ const userListsSlice = createSlice({
         state.lastFetched = "clients";
       })
       .addCase(fetchClients.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+
+      /* ========= ✅ UPDATE EMPLOYEE ========= */
+      .addCase(updateEmployee.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(updateEmployee.fulfilled, (state, action) => {
+        state.loading = false;
+
+        const index = state.employees.findIndex(
+          (e) => e.id === action.payload.id
+        );
+
+        if (index !== -1) {
+          state.employees[index] = {
+            ...state.employees[index],
+            ...action.payload,
+          };
+        }
+      })
+      .addCase(updateEmployee.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
       });
