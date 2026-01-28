@@ -1,23 +1,7 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axiosInstance from "../api/axiosInstance";
 
-/* ================= ACTIVE PROJECT ================= */
-export const fetchActiveProject = createAsyncThunk(
-  "employeeProject/fetchActiveProject",
-  async (employeeId, thunkAPI) => {
-    try {
-      const res = await axiosInstance.get(
-        `/employee/${employeeId}/active-projects`
-      );
-      return res.data.data;
-    } catch (err) {
-      if (err.response?.status === 404) return null;
-      return thunkAPI.rejectWithValue("Failed to fetch active project");
-    }
-  }
-);
-
-/* ================= OLD PROJECTS ================= */
+/* ================= EMPLOYEE PROJECTS ================= */
 export const fetchEmployeeProjects = createAsyncThunk(
   "employeeProject/fetchEmployeeProjects",
   async (employeeId, thunkAPI) => {
@@ -64,7 +48,6 @@ const employeeProjectSlice = createSlice({
   name: "employeeProject",
   initialState: {
     loading: false,
-    activeProject: null,
     oldProjects: [],
     allProjects: [],
     error: null,
@@ -78,14 +61,11 @@ const employeeProjectSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-      .addCase(fetchActiveProject.fulfilled, (state, action) => {
-        state.activeProject = action.payload;
-      })
       .addCase(fetchEmployeeProjects.fulfilled, (state, action) => {
-        state.oldProjects = action.payload;
+        state.oldProjects = action.payload || [];
       })
       .addCase(fetchAllProjects.fulfilled, (state, action) => {
-        state.allProjects = action.payload;
+        state.allProjects = action.payload || [];
       })
       .addCase(assignProjectToEmployee.pending, (state) => {
         state.loading = true;
