@@ -1,5 +1,12 @@
 import { NavLink, useNavigate, useLocation } from "react-router-dom";
-import { LayoutDashboard, UserPlus, Users, FileText } from "lucide-react";
+import {
+  LayoutDashboard,
+  UserPlus,
+  Users,
+  FileText,
+  FolderKanban,     // ✅ NEW
+} from "lucide-react";
+
 import { useRef, useState } from "react";
 
 export default function AdminSidebar() {
@@ -70,6 +77,26 @@ export default function AdminSidebar() {
             { label: "HRs", path: "/admin/user-lists?type=hrs" },
             { label: "Employees", path: "/admin/user-lists?type=employees" },
             { label: "Clients", path: "/admin/user-lists?type=clients" },
+          ]}
+          onSelect={(path) => {
+            navigate(path);
+            closeMenu();
+          }}
+        />
+
+
+
+        {/* PROJECTS */}
+        <HoverFlyout
+          label="Projects"
+          icon={<FolderKanban size={20} />}
+          defaultPath="/admin/projects"
+          open={openMenu === "projects"}
+          onEnter={() => openWithDelay("projects")}
+          onLeave={closeMenu}
+          location={location}
+          items={[
+            { label: "View All Projects", path: "/admin/projects" },
           ]}
           onSelect={(path) => {
             navigate(path);

@@ -1,4 +1,3 @@
-
 // App.jsx
 import { Routes, Route } from "react-router-dom";
 
@@ -20,13 +19,16 @@ import EmployeeDetails from "./pages/admin/EmployeeDetails";
 import HrDetails from "./pages/admin/HrDetails";
 import ManagerDetails from "./pages/admin/ManagerDetails";
 import ClientProjectList from "./pages/admin/ClientProjectList";
-import ProjectDetails from "./pages/admin/ProjectDetails";
+import ProjectDetails from "./pages/admin/projects/ProjectDetails";
 import AddEmployeeBankDetails from "./pages/admin/AddEmployeeBankDetails";
 import AddEmployeeSalaryDetails from "./pages/admin/AddEmployeeSalaryDetails";
 import EmployeeSalaryDetails from "./pages/admin/EmployeeSalaryDetails";
 import EmployeeBankDetails from "./pages/admin/EmployeeBankDetails";
 import EmployeeProjects from "./pages/admin/EmployeeProjects";
 import EmployeeLeaves from "./pages/admin/EmployeeLeaves";
+
+// ✅ NEW (GLOBAL PROJECT LIST)
+import ProjectList from "./pages/admin/projects/ProjectList";
 
 // Admin forms
 import AddAdminForm from "./components/users/AddAdminForm";
@@ -116,11 +118,10 @@ export default function App() {
           element={<EmployeeProjects />}
         />
         <Route
-  path="/admin/user-lists/employees/:employeeId/leaves"
-  element={<EmployeeLeaves />}
-/>
+          path="/admin/user-lists/employees/:employeeId/leaves"
+          element={<EmployeeLeaves />}
+        />
 
-        //......................
         {/* EMPLOYEE TABS */}
         <Route
           path="user-lists/employees/:employeeId/salary"
@@ -130,6 +131,7 @@ export default function App() {
           path="user-lists/employees/:employeeId/bank"
           element={<EmployeeBankDetails />}
         />
+
         {/* HR TABS */}
         <Route
           path="user-lists/hrs/:hrId/salary"
@@ -139,6 +141,7 @@ export default function App() {
           path="user-lists/hrs/:hrId/bank"
           element={<EmployeeBankDetails />}
         />
+
         {/* MANAGER TABS */}
         <Route
           path="user-lists/managers/:managerId/salary"
@@ -148,7 +151,8 @@ export default function App() {
           path="user-lists/managers/:managerId/bank"
           element={<EmployeeBankDetails />}
         />
-        //...................................
+
+        {/* USERS */}
         <Route path="users" element={<UserManagement />}>
           <Route path="add-admin" element={<AddAdminForm />} />
           <Route
@@ -165,6 +169,10 @@ export default function App() {
           />
           <Route path="add-client" element={<AddClientForm />} />
         </Route>
+{/* ================= ADMIN PROJECTS (GLOBAL) ================= */}
+<Route path="projects" element={<ProjectList />} /> {/* Full-page project list */}
+<Route path="projects/:projectId" element={<ProjectDetails />} /> {/* Details page */}
+
       </Route>
 
       {/* ================= HR ================= */}
@@ -178,7 +186,6 @@ export default function App() {
       >
         <Route index element={<HrDashboard />} />
 
-        {/* HR EMPLOYEE ACTIONS */}
         <Route
           path="employees/add"
           element={<AddEmployeeForm role="Employee" mode="HR" />}
