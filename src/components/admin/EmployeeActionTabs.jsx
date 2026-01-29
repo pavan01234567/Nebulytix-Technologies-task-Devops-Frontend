@@ -21,6 +21,10 @@ export default function EmployeeActionTabs() {
       label: "PROJECTS",
       path: `/admin/user-lists/employees/${employeeId}/projects`,
     },
+    {
+      label: "LEAVES", // ✅ Added
+      path: `/admin/user-lists/employees/${employeeId}/leaves`,
+    },
   ];
 
   return (

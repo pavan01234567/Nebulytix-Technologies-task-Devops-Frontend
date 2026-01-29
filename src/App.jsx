@@ -1,3 +1,4 @@
+
 // App.jsx
 import { Routes, Route } from "react-router-dom";
 
@@ -25,6 +26,7 @@ import AddEmployeeSalaryDetails from "./pages/admin/AddEmployeeSalaryDetails";
 import EmployeeSalaryDetails from "./pages/admin/EmployeeSalaryDetails";
 import EmployeeBankDetails from "./pages/admin/EmployeeBankDetails";
 import EmployeeProjects from "./pages/admin/EmployeeProjects";
+import EmployeeLeaves from "./pages/admin/EmployeeLeaves";
 
 // Admin forms
 import AddAdminForm from "./components/users/AddAdminForm";
@@ -115,6 +117,11 @@ export default function App() {
           path="user-lists/employees/:employeeId/projects"
           element={<EmployeeProjects />}
         />
+        <Route
+  path="/admin/user-lists/employees/:employeeId/leaves"
+  element={<EmployeeLeaves />}
+/>
+
         //......................
         {/* EMPLOYEE TABS */}
         <Route

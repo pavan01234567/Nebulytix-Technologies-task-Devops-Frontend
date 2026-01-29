@@ -3,7 +3,6 @@ import { useParams } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import EmployeeActionTabs from "../../components/admin/EmployeeActionTabs";
 import {
-  fetchActiveProject,
   fetchEmployeeProjects,
   fetchAllProjects,
   assignProjectToEmployee,
@@ -15,17 +14,15 @@ export default function EmployeeProjects() {
   const dispatch = useDispatch();
   const [selectedProject, setSelectedProject] = useState("");
 
-  const { activeProject, oldProjects, allProjects, success, loading } =
+  const { oldProjects, allProjects, success, loading } =
     useSelector((s) => s.employeeProject);
 
   useEffect(() => {
-    dispatch(fetchActiveProject(employeeId));
-    dispatch(fetchEmployeeProjects(employeeId));
+    dispatch(fetchEmployeeProjects(employeeId));   // ✅ only fetch old projects
   }, [employeeId, dispatch]);
 
   useEffect(() => {
     if (success) {
-      dispatch(fetchActiveProject(employeeId));
       dispatch(fetchEmployeeProjects(employeeId));
       dispatch(clearProjectStatus());
     }
@@ -44,13 +41,6 @@ export default function EmployeeProjects() {
 
       <div className="p-6 space-y-6">
         <h2 className="text-2xl font-semibold">Projects</h2>
-
-        {/* ACTIVE PROJECT */}
-        {activeProject ? (
-          <ProjectCard project={activeProject} active />
-        ) : (
-          <p className="text-gray-600">No active project assigned</p>
-        )}
 
         {/* ASSIGN PROJECT */}
         <div className="bg-white p-6 rounded shadow space-y-4">
@@ -90,7 +80,7 @@ export default function EmployeeProjects() {
         {/* OLD PROJECTS */}
         {oldProjects.length > 0 && (
           <div>
-            <h4 className="font-semibold mb-2">Old Projects</h4>
+            <h4 className="font-semibold mb-2">Employee Projects</h4>
             <div className="space-y-3">
               {oldProjects.map((p) => (
                 <ProjectCard key={p.id} project={p} />
@@ -103,10 +93,9 @@ export default function EmployeeProjects() {
   );
 }
 
-function ProjectCard({ project, active }) {
+function ProjectCard({ project }) {
   return (
     <div className="bg-white border rounded p-4">
-      {active && <span className="text-green-600 text-xs">ACTIVE</span>}
       <h3 className="font-semibold">{project.projectName}</h3>
       <p className="text-sm text-gray-600">{project.projectCode}</p>
       <p className="text-sm">Status: {project.status}</p>

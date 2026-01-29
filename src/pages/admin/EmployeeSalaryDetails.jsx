@@ -1,20 +1,25 @@
-//src/pages/admin/EmployeeSalaryDetails.jsx
 import { useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import EmployeeActionTabs from "../../components/admin/EmployeeActionTabs";
-import { fetchEmployeeSalary } from "../../store/salarySlice";
+import { fetchEmployeeSalary, clearSalaryState } from "../../store/salarySlice";
 
 export default function EmployeeSalaryDetails() {
   const { employeeId } = useParams();
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
-  const { salary, loading } = useSelector((s) => s.salary);
+  const { salary, loading, error } = useSelector((s) => s.salary);
 
   useEffect(() => {
+    // Clear previous state when switching employees
+    dispatch(clearSalaryState());
     dispatch(fetchEmployeeSalary(employeeId));
   }, [employeeId, dispatch]);
+
+  const handleAddSalary = () => {
+    navigate(`/admin/user-lists/employees/${employeeId}/add-salary-details`);
+  };
 
   return (
     <div className="space-y-6">
@@ -23,17 +28,25 @@ export default function EmployeeSalaryDetails() {
       <div className="p-6 space-y-6">
         <Header title="Salary Details" onBack={() => navigate(-1)} />
 
-        {loading && <p>Loading...</p>}
+        {loading && <p>Loading salary details...</p>}
 
-        {!loading && !salary && (
+        {!loading && error && (
+          <div className="bg-red-100 p-4 rounded text-red-700">
+            <p>{error}</p>
+            <button
+              onClick={handleAddSalary}
+              className="mt-2 px-4 py-2 bg-indigo-600 text-white rounded"
+            >
+              Add Salary Details
+            </button>
+          </div>
+        )}
+
+        {!loading && !salary && !error && (
           <div className="bg-white p-6 rounded shadow text-center">
             <p className="text-gray-600 mb-4">Salary details not added yet</p>
             <button
-              onClick={() =>
-                navigate(
-                  `/admin/user-lists/employees/${employeeId}/add-salary-details`
-                )
-              }
+              onClick={handleAddSalary}
               className="px-5 py-2 bg-indigo-600 text-white rounded"
             >
               Add Salary Details
@@ -56,7 +69,7 @@ export default function EmployeeSalaryDetails() {
   );
 }
 
-/* ================= UI ================= */
+/* ================= UI Components ================= */
 
 function Header({ title, onBack }) {
   return (

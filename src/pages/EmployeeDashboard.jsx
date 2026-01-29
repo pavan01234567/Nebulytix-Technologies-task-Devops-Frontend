@@ -16,6 +16,7 @@ export default function EmployeeDashboard() {
   "https://ui-avatars.com/api/?background=6366f1&color=fff&size=128&name=";
 
 
+  // Fetch profile only once
   useEffect(() => {
     dispatch(fetchEmployeeProfile());
   }, [dispatch]);
@@ -62,10 +63,12 @@ export default function EmployeeDashboard() {
     <div className="p-6 bg-gray-100 min-h-screen">
       <h1 className="text-2xl font-bold mb-2"></h1>
 
+      {/* STATUS */}
       {loading && <p>Loading...</p>}
       {error && <p className="text-red-600">{error}</p>}
       {uploadError && <p className="text-red-600 mb-4">{uploadError}</p>}
 
+      {/* PROFILE */}
       {profile && (
         <>
           {/* PROFILE */}
@@ -118,6 +121,11 @@ export default function EmployeeDashboard() {
           </div>
           
         </>
+      )}
+
+      {/* DAILY REPORT MODAL */}
+      {showReport && (
+        <DailyReportSubmit onClose={() => setShowReport(false)} />
       )}
     </div>
   );
