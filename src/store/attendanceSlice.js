@@ -46,10 +46,50 @@ export const clockOut = createAsyncThunk(
   }
 );
 
+// APPLY WFH
+export const applyWFH = createAsyncThunk(
+  "attendance/applyWFH",
+  async (payload, thunkAPI) => {
+    try {
+      const res = await axiosInstance.post(
+        "/employee/apply-wfh",
+        payload
+      );
+      return res.data.data; // EmployeeLeaveDTO
+    } catch (err) {
+      return thunkAPI.rejectWithValue(
+        err.response?.data?.message || "WFH apply failed"
+      );
+    }
+  }
+);
+
+// APPLY LEAVE
+export const applyLeave = createAsyncThunk(
+  "attendance/applyLeave",
+  async (payload, thunkAPI) => {
+    try {
+      const res = await axiosInstance.post(
+        "/employee/apply-leave",
+        payload
+      );
+      return res.data.data; // EmployeeLeaveDTO
+    } catch (err) {
+      return thunkAPI.rejectWithValue(
+        err.response?.data?.message || "Leave apply failed"
+      );
+    }
+  }
+);
+
+
+
 const attendanceSlice = createSlice({
   name: "attendance",
   initialState: {
     record: null, // EmployeeDTO
+    wfh: null, // EmployeeLeaveDTO
+    leave: null,
     loading: false,
     error: null,
   },
@@ -92,7 +132,35 @@ const attendanceSlice = createSlice({
       .addCase(clockOut.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
-      });
+      })
+
+      // APPLY WFH
+      .addCase(applyWFH.pending, (state) => {
+        state.loading = true;
+    })
+      .addCase(applyWFH.fulfilled, (state, action) => {
+        state.loading = false;
+        state.wfh = action.payload;
+    })
+      .addCase(applyWFH.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+    })
+
+    // APPLY LEAVE
+      .addCase(applyLeave.pending, (state) => {
+        state.loading = true;
+    })
+      .addCase(applyLeave.fulfilled, (state, action) => {
+        state.loading = false;
+        state.leave = action.payload;
+    })
+      .addCase(applyLeave.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+    });
+
+
   },
 });
 

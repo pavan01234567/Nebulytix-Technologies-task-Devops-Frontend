@@ -81,6 +81,7 @@ axiosInstance.interceptors.response.use(
         processQueue(refreshErr, null);
         reduxStore.dispatch(clearAuth());
         window.location.href = "/login";
+        console.warn("Refresh token failed, letting app handle auth state");
         return Promise.reject(refreshErr);
 
       } finally {

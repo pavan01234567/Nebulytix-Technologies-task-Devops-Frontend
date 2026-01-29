@@ -13,6 +13,8 @@ import salaryReducer from "./salarySlice";
 import bankReducer from "./bankSlice";
 import attendanceReducer from "./attendanceSlice";
 import employeeProjectReducer from "./employeeProjectSlice";
+import notificationReducer from "./notificationSlice";
+
 
 import storage from "redux-persist/lib/storage";
 import {
@@ -47,6 +49,7 @@ const rootReducer = combineReducers({
   bank: bankReducer,
   attendance: attendanceReducer, 
   employeeProject: employeeProjectReducer,
+  notification: notificationReducer,
 });
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);

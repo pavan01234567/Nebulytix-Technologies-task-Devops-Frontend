@@ -1,11 +1,14 @@
 // src/components/Navbar.jsx
 import { NavLink, useNavigate } from "react-router-dom";
+import { useSelector } from "react-redux";
+import { Bell } from "lucide-react";
 import { motion } from "framer-motion";
 import { LogIn } from "lucide-react";
 import logo from "../assets/images/nebulytixLogo.jpg";
 
 export default function Navbar() {
   const navigate = useNavigate();
+  const notifications = useSelector((s) => s.notification.list);
 
   const navLinks = [
     { to: "/", label: "Home" },
@@ -67,6 +70,16 @@ export default function Navbar() {
           <LogIn size={16} />
           Login
         </button>
+
+        <div className="relative">
+          <Bell />
+          {notifications.length > 0 && (
+              <span className="absolute -top-1 -right-1 bg-red-600 text-white text-xs rounded-full px-1">
+                {notifications.length}
+              </span>
+          )}
+        </div>
+
       </div>
     </motion.nav>
   );

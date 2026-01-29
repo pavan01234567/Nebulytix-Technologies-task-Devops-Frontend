@@ -1,7 +1,7 @@
 // src/components/hr/EmployeeList.jsx
 import { useEffect, useState } from "react";
-import axios from "axios";
-import { BACKEND_BASE_URL } from "../../api/config";
+import axiosInstance from "../../api/axiosInstance";
+// import { BACKEND_BASE_URL } from "../../api/config";
 import EmployeeCard from "./EmployeeCard";
 import { Search } from "lucide-react";
 
@@ -10,58 +10,48 @@ export default function EmployeeList({ refreshKey = 0, onActionComplete, roleFil
   const [filteredEmployees, setFilteredEmployees] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState("active"); // 👈 NEW
 
-  useEffect(() => {
-    let mounted = true;
+  
+  //----- FETCH EMPLOYEES (active /inactive) -----
+  const fetchEmployees = async () => {
     setLoading(true);
+    try {
+      const res = await axiosInstance.get("/hr/getEmpList");
+      const list = res.data?.data || [];
 
-    axios
-      .get(`${BACKEND_BASE_URL}/hr/getEmpList`)
-      .then((res) => {
-        if (!mounted) return;
-        const list = res.data?.data || [];
-        setEmployees(Array.isArray(list) ? list : []);
-        setFilteredEmployees(Array.isArray(list) ? list : []);
-      })
-      .catch((err) => {
-        console.error("Failed to fetch employees:", err);
-        if (!mounted) return;
-        setEmployees([]);
-        setFilteredEmployees([]);
-      })
-      .finally(() => {
-        if (!mounted) return;
-        setLoading(false);
-      });
-
-    return () => (mounted = false);
-  }, [refreshKey]);
-
-  useEffect(() => {
-  const token = localStorage.getItem("neb_token");
-
-  axios.get(`${BACKEND_BASE_URL}/admin/employees`, {
-    headers: { Authorization: `Bearer ${token}` }
-  })
-  .then(res => {
-    let filtered = res.data || [];
-
-    if (roleFilter === "EMPLOYEE") {
-      filtered = filtered.filter(u => u.loginRole === "EMPLOYEE");
-    } else if (roleFilter === "HR") {
-      filtered = filtered.filter(u => u.loginRole === "HR");
+      setEmployees(list);
+      setFilteredEmployees(list);
+    } catch (err) {
+      console.error("Failed to fetch employees:", err);
+      setEmployees([]);
+      setFilteredEmployees([]);
+    } finally {
+      setLoading(false);
     }
+  };
+/* --------- filtering by status (active/inactive) --------- */
+  useEffect(() => {
+  const filtered = employees.filter(
+    (emp) => emp.empStatus?.toLowerCase() === statusFilter
+  );
+  setFilteredEmployees(filtered);
+}, [employees, statusFilter]);
 
-    setEmployees(filtered);
-  })
-  .catch(err => console.error("Failed to fetch employees", err));
-}, [roleFilter, refreshKey]);
+
+// ✅ INITIAL + REFRESH FETCH
+  useEffect(() => {
+    fetchEmployees();
+  }, [refreshKey, statusFilter]);
+
 
 
   // 🔎 Search Logic
   useEffect(() => {
     const s = search.toLowerCase();
-    const result = employees.filter(
+    const result = employees
+    .filter((emp) => emp.empStatus?.toLowerCase() === statusFilter)
+    .filter(
       (emp) =>
         emp.firstName?.toLowerCase().includes(s) ||
         emp.lastName?.toLowerCase().includes(s) ||
@@ -69,7 +59,7 @@ export default function EmployeeList({ refreshKey = 0, onActionComplete, roleFil
         emp.cardNumber?.toString().includes(s)
     );
     setFilteredEmployees(result);
-  }, [search, employees]);
+  }, [search, employees, statusFilter]);
 
   return (
     <div className="space-y-6">
@@ -79,20 +69,53 @@ export default function EmployeeList({ refreshKey = 0, onActionComplete, roleFil
 
         {/* ⭐ Employee List heading with HR dashboard color */}
         <h2
-          className="
-            text-2xl font-bold tracking-wide
-            text-sky-700     /* Matches HR Dashboard */
-          "
+          className="ml-2 text-2xl font-bold tracking-wide
+            text-sky-700     /* Matches HR Dashboard */"
         >
           Employee List
         </h2>
 
+
+        {/*----------- CENTER: GLASS TOGGLE ------------*/}
+
+        <div className="flex gap-3 p-2 w-fit rounded-full bg-white/40 backdrop-blur-xl border border-white/50 shadow-[inset_0_1px_2px_rgba(255,255,255,0.6),0_8px_20px_rgba(0,0,0,0.08)] mt-4">
+          <button
+            onClick={() => setStatusFilter("active")}
+            className={`
+              px-6 py-2 rounded-full text-sm font-semibold
+              transition-all duration-300
+              ${
+                statusFilter === "active"
+                 ? "bg-white/70 text-teal-600 shadow-[inset_0_1px_2px_rgba(255,255,255,0.8),0_6px_16px_rgba(0,0,0,0.12)] backdrop-blur-xl"
+                 : "bg-transparent text-gray-400 hover:text-gray-600"
+              }
+            `}
+          >
+            Active 
+          </button>
+
+           <button
+              onClick={() => setStatusFilter("inactive")}
+              className={`
+                px-6 py-2 rounded-full text-sm font-semibold
+                transition-all duration-300
+                ${
+                  statusFilter === "inactive"
+                    ? "bg-white/70 text-teal-600 shadow-[inset_0_1px_2px_rgba(255,255,255,0.8),0_6px_16px_rgba(0,0,0,0.12)] backdrop-blur-xl"
+                    : "bg-transparent text-gray-400 hover:text-gray-600"
+                }
+              `}
+            >
+              Inactive 
+            </button>
+        </div>
+
         {/* ⭐ Search Input with Icon */}
-        <div className="relative">
+        <div className="relative mr-10 mt-3">
           <Search
             className="
               w-5 h-5 absolute left-4 top-1/2 
-              -translate-y-1/2 text-gray-400
+              -translate-y-1/2 text-blue-900
             "
           />
 
@@ -102,7 +125,7 @@ export default function EmployeeList({ refreshKey = 0, onActionComplete, roleFil
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="
-              w-80 pl-12 pr-4 py-3
+              w-80 pl-10 pr-1 py-3 px-30
               rounded-xl border border-gray-300
               bg-white shadow-sm
               text-gray-700 placeholder-gray-400
@@ -127,13 +150,17 @@ export default function EmployeeList({ refreshKey = 0, onActionComplete, roleFil
         </div>
       )}
 
+      {console.log("Filtered employees:", filteredEmployees)}
+
+
       {/* EMPLOYEE CARDS */}
-      <div className="space-y-4">
+      {/* <div className="space-y-4 max-w-2xl mx-auto px-2"> */}
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 px-2">
         {filteredEmployees.map((emp) => (
           <EmployeeCard
             key={emp.id}
             employee={emp}
-            onActionComplete={onActionComplete}
+            onActionComplete={fetchEmployees}
           />
         ))}
       </div>
