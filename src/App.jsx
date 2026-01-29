@@ -48,6 +48,8 @@ import EmployeeDashboard from "./pages/EmployeeDashboard";
 // Client
 import ClientLayout from "./layout/client/ClientLayout";
 import ClientDashboard from "./pages/ClientDashboard";
+import EmployeeList from "./components/hr/EmployeeList";
+
 
 // Protected
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -130,6 +132,8 @@ export default function App() {
           path="user-lists/employees/:employeeId/bank"
           element={<EmployeeBankDetails />}
         />
+
+
         {/* HR TABS */}
         <Route
           path="user-lists/hrs/:hrId/salary"
@@ -139,6 +143,8 @@ export default function App() {
           path="user-lists/hrs/:hrId/bank"
           element={<EmployeeBankDetails />}
         />
+        
+
         {/* MANAGER TABS */}
         <Route
           path="user-lists/managers/:managerId/salary"
@@ -178,12 +184,19 @@ export default function App() {
       >
         <Route index element={<HrDashboard />} />
 
+        <Route 
+          path="/hr/employees" 
+          element={<EmployeeList />} 
+        />
+
         {/* HR EMPLOYEE ACTIONS */}
         <Route
           path="employees/add"
           element={<AddEmployeeForm role="Employee" mode="HR" />}
         />
       </Route>
+
+
 
       {/* ================= MANAGER ================= */}
       <Route
