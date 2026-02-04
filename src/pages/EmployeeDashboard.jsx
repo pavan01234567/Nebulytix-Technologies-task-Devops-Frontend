@@ -5,13 +5,15 @@ import AttendanceCard from "../components/AttendanceCard";
 import WFHCard from "../components/WFHCard.jsx";
 import ApplyLeaveCard from "../components/ApplyLeaveCard.jsx";
 import axiosInstance from "../api/axiosInstance";
-import DailyReportSubmit from "../components/reports/DailyReportSubmit";
+import DailyReportSubmit from "../components/reports/DailyReportSubmit.jsx";
+import { uploadToCloudinary } from "../api/cloudinary.js";
 
 export default function EmployeeDashboard() {
   const dispatch = useDispatch();
   const { profile, loading, error } = useSelector((s) => s.employee);
   const [uploadLoading, setUploadLoading] = useState(false);
   const [uploadError, setUploadError] = useState("");
+  const [showReport, setShowReport] = useState(false);
   const fileInputRef = useRef(null);
   const DEFAULT_AVATAR =
   "https://ui-avatars.com/api/?background=6366f1&color=fff&size=128&name=";
@@ -34,18 +36,18 @@ export default function EmployeeDashboard() {
     setUploadError("");
 
     try {
-      const formData = new FormData();
-      formData.append("profileImage", file);
+      // 1. Upload to Cloudinary using the EMPLOYEE_PIC preset
+    // This returns { url, publicId, format }
+    const cloudData = await uploadToCloudinary(file, 'EMPLOYEE');
 
-      const response = await axiosInstance.put(
-        `/employee/${profile.id}/profile-picture`,
-        formData,
-        {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-        }
-      );
+    if (!cloudData?.url) throw new Error("Cloudinary upload failed");
+
+    // 2. Send only the URL string to your Java Backend
+    // Change your Java endpoint to expect a String URL instead of MultipartFile
+    const response = await axiosInstance.put(
+      `/employee/${profile.id}/profile-picture`,
+      { profilePictureUrl: cloudData.url } // Sending JSON now, not FormData
+    );
 
       if (response.data?.data) {
         dispatch(fetchEmployeeProfile());
@@ -53,15 +55,13 @@ export default function EmployeeDashboard() {
     } catch (err) {
       setUploadError(err.response?.data?.message || "Failed to upload profile picture");
     } finally {
-      setUploadLoading(false);
+      setUploadLoading(false); 
       if (fileInputRef.current) {
         fileInputRef.current.value = "";
       }
     }
   };
-   
-  const [showReport, setShowReport] = useState(false);
-
+ 
   return (
     <div className="p-6 bg-gray-100 min-h-screen">
       <h1 className="text-2xl font-bold mb-2"></h1>
@@ -115,13 +115,13 @@ export default function EmployeeDashboard() {
             </div>
           </div>
 
-          {/* SUBMIT REPORT BUTTON */}
-          <div className="mt-4 mb-4">
+          {/* DAILY REPORT BUTTON */}
+          <div className="mt-4">
             <button
               onClick={() => setShowReport(true)}
-              className="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-3 px-6 rounded-lg shadow transition-colors"
+              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md shadow transition-colors"
             >
-              Submit Report
+              Submit Daily Report
             </button>
           </div>
 

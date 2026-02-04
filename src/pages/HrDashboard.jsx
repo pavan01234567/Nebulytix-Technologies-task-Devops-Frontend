@@ -1,14 +1,42 @@
 import { useNavigate } from "react-router-dom";
-import { useEffect } from "react";
+import { useEffect, useRef, useState} from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchHrProfile } from "../store/hrSlice";
 import AttendanceCard from "../components/AttendanceCard";
 import ViewDailyReport from "./ViewDailyReport";
+import axiosInstance from "../api/axiosInstance";
+import { uploadToCloudinary } from "../api/cloudinary.js";
 
 export default function HrDashboard() {
   const dispatch = useDispatch();
   const { profile, loading, error } = useSelector((s) => s.hr);
   const navigate = useNavigate();
+  const [uploadLoading, setUploadLoading] = useState(false);
+  const fileInputRef = useRef(null);
+  const DEFAULT_AVATAR = "https://ui-avatars.com";
+  
+  const handleFileChange = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploadLoading(true);
+    try {
+      // 1. Upload to Cloudinary using HR_PIC preset
+      const cloudData = await uploadToCloudinary(file, 'HR');
+      
+      // 2. Save URL to Java backend
+      await axiosInstance.put(`/hr/${profile.id}/profile-picture`, {
+        profilePictureUrl: cloudData.url
+      });
+      
+      dispatch(fetchHrProfile());
+    } catch (err) {
+      alert("Upload failed: " + err.message);
+    } finally {
+      setUploadLoading(false);
+    }
+  };
+
 
 
   useEffect(() => {
@@ -36,41 +64,50 @@ export default function HrDashboard() {
       {/* PROFILE CARD */}
       {profile && (
         <>
-          <div className="bg-white shadow-md rounded-lg p-6 border">
-            <h2 className="text-xl font-semibold text-[#0D243C] mb-4">
-              Profile Overview
-            </h2>
+        <div className="bg-white shadow-md rounded-lg p-6 border">
+          <div className="flex flex-col md:flex-row gap-8 items-center md:items-start">
+        
+            {/* AVATAR SECTION */}
+            <div className="relative group">
+              <img
+                src={profile.profilePictureUrl || `${DEFAULT_AVATAR}${profile.firstName}+${profile.lastName}`}
+                alt="HR Avatar"
+                className="w-32 h-32 rounded-full object-cover border-4 border-gray-100 shadow-sm"
+              />
+              <button
+                onClick={() => fileInputRef.current.click()}
+                disabled={uploadLoading}
+                className="absolute bottom-1 right-1 bg-[#0D243C] hover:bg-[#1a3a5c] text-white p-2 rounded-full shadow-md transition-all"
+                title="Update Profile Picture"
+             >
+                {uploadLoading ? "..." : "✎"}
+             </button>
+             <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handleFileChange}
+                className="hidden"
+             />
+           </div>
+          
+          {/* DETAILS SECTION */}
 
             <div className="grid md:grid-cols-2 gap-4 text-gray-700">
               <p>
                 <span className="font-semibold">Name:</span>{" "}
                 {profile.firstName} {profile.lastName}
               </p>
-
-              <p>
-                <span className="font-semibold">Email:</span> {profile.email}
-              </p>
-
-              <p>
-                <span className="font-semibold">Mobile:</span> {profile.mobile}
-              </p>
-
-              <p>
-                <span className="font-semibold">Department:</span>{" "}
-                {profile.department}
-              </p>
-
-              <p>
-                <span className="font-semibold">Designation:</span>{" "}
-                {profile.designation}
-              </p>
-
-              <p>
-                <span className="font-semibold">Gender:</span>{" "}
-                {profile.gender}
-              </p>
+              <p><span className="font-semibold">Email:</span> {profile.email}</p>
+              <p><span className="font-semibold">Mobile:</span> {profile.mobile}</p>
+              <p><span className="font-semibold">Department:</span>{" "}{profile.department}</p>
+              <p><span className="font-semibold">Designation:</span>{" "}{profile.designation}</p>
+              <p><span className="font-semibold">Gender:</span>{" "}{profile.gender}</p>
             </div>
           </div>
+        </div>
+      
+          
 
           {/* 🔹 ATTENDANCE */}
           <div className="mt-6">
