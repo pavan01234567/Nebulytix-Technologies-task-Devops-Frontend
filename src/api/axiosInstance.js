@@ -1,6 +1,4 @@
 
-
-
 import axios from "axios";
 import { BACKEND_BASE_URL } from "./config";
 import { clearAuth, refreshToken } from "../store/authSlice";
