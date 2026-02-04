@@ -5,6 +5,7 @@ import AttendanceCard from "../components/AttendanceCard";
 import WFHCard from "../components/WFHCard.jsx";
 import ApplyLeaveCard from "../components/ApplyLeaveCard.jsx";
 import axiosInstance from "../api/axiosInstance";
+import DailyReportSubmit from "../components/reports/DailyReportSubmit";
 
 export default function EmployeeDashboard() {
   const dispatch = useDispatch();
@@ -58,6 +59,8 @@ export default function EmployeeDashboard() {
       }
     }
   };
+   
+  const [showReport, setShowReport] = useState(false);
 
   return (
     <div className="p-6 bg-gray-100 min-h-screen">
@@ -110,6 +113,16 @@ export default function EmployeeDashboard() {
                 <p><b>Phone:</b> {profile.mobile}</p>
               </div>
             </div>
+          </div>
+
+          {/* SUBMIT REPORT BUTTON */}
+          <div className="mt-4 mb-4">
+            <button
+              onClick={() => setShowReport(true)}
+              className="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-3 px-6 rounded-lg shadow transition-colors"
+            >
+              Submit Report
+            </button>
           </div>
 
           {/* ATTENDANCE */}

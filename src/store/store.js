@@ -1,4 +1,5 @@
 import { configureStore, combineReducers } from "@reduxjs/toolkit";
+
 import authReducer from "./authSlice";
 import adminReducer from "./adminSlice";
 import hrReducer from "./hrSlice";
@@ -14,7 +15,7 @@ import bankReducer from "./bankSlice";
 import attendanceReducer from "./attendanceSlice";
 import employeeProjectReducer from "./employeeProjectSlice";
 import notificationReducer from "./notificationSlice";
-
+import jobReducer from "./jobSlice"; // ✅ NEW
 
 import storage from "redux-persist/lib/storage";
 import {
@@ -31,7 +32,7 @@ import {
 const persistConfig = {
   key: "root",
   storage,
-  whitelist: ["auth"], 
+  whitelist: ["auth"], // keep as-is
 };
 
 const rootReducer = combineReducers({
@@ -47,9 +48,10 @@ const rootReducer = combineReducers({
   project: projectReducer,
   salary: salaryReducer,
   bank: bankReducer,
-  attendance: attendanceReducer, 
+  attendance: attendanceReducer,
   employeeProject: employeeProjectReducer,
   notification: notificationReducer,
+  jobs: jobReducer, // ✅ NEW
 });
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);
@@ -71,4 +73,4 @@ export const store = configureStore({
     }),
 });
 
-export const persistor = persistStore(store);
+export const persistor = persistStore(store); 

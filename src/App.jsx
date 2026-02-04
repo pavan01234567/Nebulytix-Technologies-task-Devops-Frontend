@@ -1,4 +1,3 @@
-
 // App.jsx
 import { Routes, Route } from "react-router-dom";
 
@@ -20,13 +19,18 @@ import EmployeeDetails from "./pages/admin/EmployeeDetails";
 import HrDetails from "./pages/admin/HrDetails";
 import ManagerDetails from "./pages/admin/ManagerDetails";
 import ClientProjectList from "./pages/admin/ClientProjectList";
-import ProjectDetails from "./pages/admin/ProjectDetails";
+import ProjectDetails from "./pages/admin/projects/ProjectDetails";
 import AddEmployeeBankDetails from "./pages/admin/AddEmployeeBankDetails";
 import AddEmployeeSalaryDetails from "./pages/admin/AddEmployeeSalaryDetails";
 import EmployeeSalaryDetails from "./pages/admin/EmployeeSalaryDetails";
 import EmployeeBankDetails from "./pages/admin/EmployeeBankDetails";
 import EmployeeProjects from "./pages/admin/EmployeeProjects";
 import EmployeeLeaves from "./pages/admin/EmployeeLeaves";
+import AdminJobsPage from "./components/admin/AdminJobsPage";
+import AdminJobDetailPage from "./components/AdminJobDetailPage"
+
+// ✅ NEW (GLOBAL PROJECT LIST)
+import ProjectList from "./pages/admin/projects/ProjectList";
 
 // Admin forms
 import AddAdminForm from "./components/users/AddAdminForm";
@@ -76,6 +80,11 @@ export default function App() {
       >
         <Route index element={<AdminDashboard />} />
         <Route path="user-lists" element={<UserLists />} />
+        <Route path="employees" element={<UserLists userType="employees" />} />
+        <Route path="managers" element={<UserLists userType="managers" />} />
+        <Route path="hrs" element={<UserLists userType="hrs" />} />
+        <Route path="admins" element={<UserLists userType="admins" />} />
+        <Route path="clients" element={<UserLists userType="clients" />} />
         <Route
           path="user-lists/clients/:clientId"
           element={<ClientDetails />}
@@ -118,11 +127,10 @@ export default function App() {
           element={<EmployeeProjects />}
         />
         <Route
-  path="/admin/user-lists/employees/:employeeId/leaves"
-  element={<EmployeeLeaves />}
-/>
+          path="/admin/user-lists/employees/:employeeId/leaves"
+          element={<EmployeeLeaves />}
+        />
 
-        //......................
         {/* EMPLOYEE TABS */}
         <Route
           path="user-lists/employees/:employeeId/salary"
@@ -154,7 +162,8 @@ export default function App() {
           path="user-lists/managers/:managerId/bank"
           element={<EmployeeBankDetails />}
         />
-        //...................................
+
+        {/* USERS */}
         <Route path="users" element={<UserManagement />}>
           <Route path="add-admin" element={<AddAdminForm />} />
           <Route
@@ -171,7 +180,16 @@ export default function App() {
           />
           <Route path="add-client" element={<AddClientForm />} />
         </Route>
+{/* ================= ADMIN PROJECTS (GLOBAL) ================= */}
+<Route path="projects" element={<ProjectList />} /> {/* Full-page project list */}
+<Route path="projects/:projectId" element={<ProjectDetails />} /> {/* Details page */}
+
+
+        {/* Jobs */}
+        <Route path="jobs" element={<AdminJobsPage />} />
+        <Route path="jobs/:jobId" element={<AdminJobDetailPage />} />
       </Route>
+      
 
       {/* ================= HR ================= */}
       <Route
