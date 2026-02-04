@@ -27,10 +27,11 @@ const tabs = [
   { label: "CLIENTS", type: "clients" },
 ];
 
-export default function UserLists() {
+export default function UserLists({ userType: propUserType }) {
   const dispatch = useDispatch();
   const { search } = useLocation();
-  const activeType = new URLSearchParams(search).get("type") || "admins";
+  const queryUserType = new URLSearchParams(search).get("type");
+  const activeType = propUserType || queryUserType || "admins";
 
   const { loading, error } = useSelector((state) => state.userLists);
 
