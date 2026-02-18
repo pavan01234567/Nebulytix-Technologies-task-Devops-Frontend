@@ -17,11 +17,4 @@ spec:
           image: 935743309939.dkr.ecr.ap-south-1.amazonaws.com/nebulytixfortend:latest
           ports:
             - containerPort: 5054
-          env:
-            - name: SPRING_DATASOURCE_URL
-              value: jdbc:mysql://<my-RDS-ENDPOINT>:3306/nebulytix_db
-            - name: SPRING_DATASOURCE_USERNAME
-              value: neb_user
-            - name: SPRING_DATASOURCE_PASSWORD
-              value: Neb@123  
        
