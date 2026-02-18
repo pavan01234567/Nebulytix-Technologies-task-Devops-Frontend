@@ -8,5 +8,4 @@ spec:
     app: neb-fortend
   ports:
     - port: 80
-      targetPort: 5054
       nodePort: 30000

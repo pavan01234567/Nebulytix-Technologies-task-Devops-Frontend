@@ -3,10 +3,16 @@ kind: Deployment
 metadata:
   name: nebulytix-fortend
 spec:
-  replicas: 2
+  minReadySeconds: 5
+  replicas: 4
   selector:
     matchLabels:
       app: neb-fortend
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:    
+      maxSurge: 25%
+      maxUnavailable: 25%
   template:
     metadata:
       labels:
@@ -16,5 +22,5 @@ spec:
         - name: neb-fortend
           image: 935743309939.dkr.ecr.ap-south-1.amazonaws.com/nebulytixfortend:latest
           ports:
-            - containerPort: 5054
+            - containerPort: 80
        
