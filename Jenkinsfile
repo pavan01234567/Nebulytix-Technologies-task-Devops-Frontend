@@ -17,12 +17,6 @@ pipeline {
       }
     }
 
-    stage('Build Backend') {
-      steps {
-        sh 'mvn clean package -DskipTests'
-      }
-    }
-
     stage('ECR Login') {
       steps {
         sh '''
