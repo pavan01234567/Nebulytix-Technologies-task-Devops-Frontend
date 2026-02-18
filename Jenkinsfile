@@ -29,7 +29,7 @@ pipeline {
     stage('Build & Push Frontend Image') {
       steps {
         sh '''
-          docker build -t neb-frontend frontend/
+          docker build -t neb-frontend:latest .
           docker tag neb-frontend:latest $ECR_FRONTEND:latest
           docker push $ECR_FRONTEND:latest
         '''
